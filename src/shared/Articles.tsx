@@ -61,6 +61,7 @@ export default function Articles() {
     {
       value: "another",
       title: "Olive Stock's Deep Research",
+      id: "deep-research",
       data: [
         {
           id: 1,
@@ -96,7 +97,7 @@ export default function Articles() {
         <Tabs defaultValue="allstocks">
           <TabsList className="bg-transparent mb-3 text-[16px]">
             {tabsArticleData.map((tabTitle) => (
-              <TabsTrigger key={tabTitle.value} value={tabTitle.value}>
+              <TabsTrigger id={tabTitle.id} key={tabTitle.value} value={tabTitle.value}>
                 {tabTitle.title}
               </TabsTrigger>
             ))}

@@ -12,6 +12,7 @@ import StockDashboard from "@/shared/StockDashboard";
 import { useQuery } from "@tanstack/react-query";
 import useAxios from "@/hooks/useAxios";
 import { useSearchParams } from "next/navigation";
+import Link from "next/link";
 
 const SearchResult = () => {
   const [isActive, setIsActive] = useState("price");
@@ -32,11 +33,22 @@ const SearchResult = () => {
     },
   });
 
+  console.log(stockData);
+
   // Calculate percentage difference
-  const percentDiff = (((stockData?.valuationBar?.currentPrice - stockData?.valuationBar?.fairValue) / stockData?.valuationBar?.fairValue) * 100)
-  const isOvervalued = stockData?.valuationBar?.currentPrice > stockData?.valuationBar?.fairValue;
-  const isUndervalued = stockData?.valuationBar?.currentPrice < stockData?.valuationBar?.fairValue;
-  const isFairlyValued = Math.abs(stockData?.valuationBar?.currentPrice - stockData?.valuationBar?.fairValue) < 0.01;
+  const percentDiff =
+    ((stockData?.valuationBar?.currentPrice -
+      stockData?.valuationBar?.fairValue) /
+      stockData?.valuationBar?.fairValue) *
+    100;
+  const isOvervalued =
+    stockData?.valuationBar?.currentPrice > stockData?.valuationBar?.fairValue;
+  const isUndervalued =
+    stockData?.valuationBar?.currentPrice < stockData?.valuationBar?.fairValue;
+  const isFairlyValued =
+    Math.abs(
+      stockData?.valuationBar?.currentPrice - stockData?.valuationBar?.fairValue
+    ) < 0.01;
 
   // Determine colors based on valuation
   const getGradientColors = () => {
@@ -66,11 +78,11 @@ const SearchResult = () => {
   // Get status text and color
   const getStatusInfo = () => {
     if (isFairlyValued) {
-      return { text: "Fair Value", bgColor: "#28A745", textColor: "white" };
+      return { text: "Fair Value", bgColor: "#28A745", textColor: "#28A745" };
     } else if (isUndervalued) {
-      return { text: "Under Value", bgColor: "#FFD700", textColor: "black" };
+      return { text: "Under Value", bgColor: "#FFD700", textColor: "#FFD700" };
     } else {
-      return { text: "Over Value", bgColor: "#FF5733", textColor: "white" };
+      return { text: "Over Value", bgColor: "#FF5733", textColor: "#FF5733" };
     }
   };
 
@@ -90,10 +102,10 @@ const SearchResult = () => {
             <div className="absolute bottom-[16px] left-1/2 -translate-x-1/2 text-center text-sm text-gray-700 font-medium">
               Poor Financial Health
             </div>
-            <div className="absolute top-1/2 left-[-30px] -translate-y-1/2 text-sm text-gray-700 font-medium transform -rotate-90 origin-center text-center">
+            <div className="absolute top-1/2 left-[-45px] -translate-y-1/2 text-sm text-gray-700 font-medium transform -rotate-90 origin-center text-center">
               Low Competitive Advantage
             </div>
-            <div className="absolute top-1/2 right-[-30px] -translate-y-1/2 text-sm text-gray-700 font-medium transform rotate-90 origin-center text-center">
+            <div className="absolute top-1/2 right-[-45px] -translate-y-1/2 text-sm text-gray-700 font-medium transform rotate-90 origin-center text-center">
               High Competitive Advantage
             </div>
 
@@ -173,23 +185,31 @@ const SearchResult = () => {
                 <h1 className="text-xl font-bold mb-2 text-gray-800 truncate ">
                   {stockData?.company}
                 </h1>
-                <Image
-                  src={"/images/apple.png"}
-                  alt="Apple Logo"
-                  width={38}
-                  height={47}
-                />
+                {stockData?.logo && (
+                  <Image
+                    src={stockData.logo}
+                    alt="Company Logo"
+                    width={38}
+                    height={47}
+                  />
+                )}
               </div>
 
-              <div>
-                <button className="bg-green-500 text-white font-semibold px-3 py-2 rounded-lg">
-                  Deep Research
-                </button>
+              <div className=" w-1/3 flex justify-end">
+                <a href="#deep-research">
+                  <button className="bg-green-500 text-white font-semibold px-3 py-2 rounded-lg">
+                    Deep Research
+                  </button>
+                </a>
               </div>
 
-              <div>
+              <div className="w-1/3 flex justify-end">
                 <Image
-                  src={"/images/chad.png"}
+                  src={
+                    stockData?.shariaCompliant
+                      ? "/images/chad.png"
+                      : "/images/chadRed.png"
+                  }
                   alt="Chad Logo"
                   width={40}
                   height={40}
@@ -206,14 +226,16 @@ const SearchResult = () => {
                 xmlns="http://www.w3.org/2000/svg"
                 className="mx-auto h-[230px] w-[80%]"
               >
-                <rect
-                  x="307.557"
-                  y="19.252"
-                  width="32.4444"
-                  height="32.4444"
-                  rx="16.2222"
-                  fill="#676767"
-                />
+                <Link href={`/graphic-concept`}>
+                  <rect
+                    x="307.557"
+                    y="19.252"
+                    width="32.4444"
+                    height="32.4444"
+                    rx="16.2222"
+                    fill="#676767"
+                  />
+                </Link>
                 <path
                   d="M322.624 39.3246H324.382V40.9746H322.624V39.3246ZM323.796 29.9746C326.932 30.0956 328.297 33.0656 326.434 35.2931C325.947 35.8431 325.162 36.2061 324.775 36.6681C324.382 37.1246 324.382 37.6746 324.382 38.2246H322.624C322.624 37.3061 322.624 36.5306 323.016 35.9806C323.403 35.4306 324.189 35.1061 324.675 34.7431C326.094 33.5111 325.742 31.7676 323.796 31.6246C323.33 31.6246 322.882 31.7984 322.553 32.1079C322.223 32.4173 322.038 32.837 322.038 33.2746H320.279C320.279 32.3994 320.65 31.56 321.309 30.9412C321.969 30.3223 322.863 29.9746 323.796 29.9746Z"
                   fill="white"
@@ -335,6 +357,7 @@ const SearchResult = () => {
                   height="23"
                   stroke="#C8C8C8"
                   fill="white"
+                  className="bg-green-500"
                 />
                 <text
                   x="418"
@@ -380,19 +403,19 @@ const SearchResult = () => {
 
                 <text
                   x="524"
-                  y="58"
+                  y="65"
                   textAnchor="middle"
                   className="text-xs font-bold"
-                  fill={statusInfo.textColor}
+                  fill={"#03AC13"}
                 >
-                  {Math.abs((percentDiff))}%
+                  {Math.abs(percentDiff)}%
                 </text>
                 <text
                   x="524"
-                  y="72"
+                  y="77"
                   textAnchor="middle"
                   className="text-xs font-medium"
-                  fill={statusInfo.textColor}
+                  fill={"#03AC13"}
                 >
                   {statusInfo.text}
                 </text>

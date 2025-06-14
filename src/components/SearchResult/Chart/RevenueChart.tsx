@@ -13,6 +13,9 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart";
+import useAxios from "@/hooks/useAxios";
+import { useQuery } from "@tanstack/react-query";
+import { useSearchParams } from "next/navigation";
 const chartData = [
   { month: "January", desktop: 186, mobile: 80 },
   { month: "February", desktop: 305, mobile: 200 },
@@ -42,6 +45,21 @@ const chartConfig = {
 } satisfies ChartConfig;
 
 const RevenueChart = () => {
+
+  const axiosInstance = useAxios();
+  const searchPamars = useSearchParams();
+  const query = searchPamars.get("q");
+
+  const {data : revenueData, isLoading} = useQuery({
+    queryKey : ["revenue-data"],
+    queryFn : async () => {
+      const res = await axiosInstance(`/stocks/stock/earnings-surprise?symbol=${query}`);
+      return res.data;
+    }
+  })
+
+  console.log(revenueData, isLoading)
+
   return (
     <div className="">
       <Card className="">

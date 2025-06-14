@@ -12,7 +12,13 @@ const nextConfig = {
         hostname: "flagsapi.com",
         pathname: "/**", // Allows all paths under flagcdn.com
       },
+      {
+        protocol: "https",
+        hostname: "static2.finnhub.io",
+        pathname: "/**", // Allows all paths under flagcdn.com
+      },
     ],
+    
   },
 };
 
