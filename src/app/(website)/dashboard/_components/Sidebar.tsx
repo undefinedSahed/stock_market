@@ -52,7 +52,7 @@ const items = [
   {
     title: "Deep Research",
     url: "/dashboard/deep-research",
-    addUrl: "/dashboard/news/add-deep-research",
+    addUrl: "/dashboard/deep-research/add-deep-research",
     icon: Newspaper,
   },
   {

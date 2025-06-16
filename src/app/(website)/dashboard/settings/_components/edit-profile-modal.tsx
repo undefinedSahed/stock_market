@@ -1,72 +1,115 @@
 "use client"
 
 import type React from "react"
-
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { motion, AnimatePresence } from "framer-motion"
-import { AlertCircle } from "lucide-react"
-import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Loader2 } from "lucide-react"
 
-interface EditPasswordModalProps {
-  isOpen: boolean
-  onClose: () => void
+interface ProfileData {
+  _id?: string
+  firstName?: string
+  lastName?: string
+  userName?: string
+  email?: string
+  phone?: string
+  bio?: string
 }
 
-export function EditPasswordModal({ isOpen, onClose }: EditPasswordModalProps) {
-  const [formData, setFormData] = useState({
-    currentPassword: "",
-    newPassword: "",
-    confirmPassword: "",
-  })
-  const [error, setError] = useState("")
-  const [success, setSuccess] = useState(false)
+interface EditProfileModalProps {
+  isOpen: boolean
+  onClose: () => void
+  profileData: ProfileData
+  onUpdate: (data: Partial<ProfileData>) => void
+  personalInfoOnly?: boolean
+  isLoading?: boolean
+}
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+export function EditProfileModal({
+  isOpen,
+  onClose,
+  profileData,
+  onUpdate,
+  personalInfoOnly = false,
+  isLoading = false,
+}: EditProfileModalProps) {
+  const [formData, setFormData] = useState<ProfileData>({
+    firstName: "",
+    lastName: "",
+    userName: "",
+    email: "",
+    phone: "",
+    bio: "",
+  })
+
+  // Update form data when profileData changes
+  useEffect(() => {
+    if (profileData) {
+      setFormData({
+        firstName: profileData.firstName || "",
+        lastName: profileData.lastName || "",
+        userName: profileData.userName || "",
+        email: profileData.email || "",
+        phone: profileData.phone || "",
+        bio: profileData.bio || "",
+      })
+    }
+  }, [profileData])
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
     setFormData((prev) => ({ ...prev, [name]: value }))
-    setError("")
   }
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
 
-    if (!formData.currentPassword || !formData.newPassword || !formData.confirmPassword) {
-      setError("All fields are required")
-      return
+    // Only send changed fields
+    const changedData: Partial<ProfileData> = {}
+
+    if (formData.firstName !== profileData.firstName) {
+      changedData.firstName = formData.firstName
+    }
+    if (formData.lastName !== profileData.lastName) {
+      changedData.lastName = formData.lastName
+    }
+    if (formData.userName !== profileData.userName) {
+      changedData.userName = formData.userName
+    }
+    if (formData.email !== profileData.email) {
+      changedData.email = formData.email
+    }
+    if (formData.phone !== profileData.phone) {
+      changedData.phone = formData.phone
+    }
+    if (formData.bio !== profileData.bio) {
+      changedData.bio = formData.bio
     }
 
-    if (formData.newPassword !== formData.confirmPassword) {
-      setError("New passwords don't match")
-      return
-    }
-
-    if (formData.newPassword.length < 8) {
-      setError("Password must be at least 8 characters")
-      return
-    }
-
-    // Simulate password change success
-    setSuccess(true)
-    setTimeout(() => {
-      setSuccess(false)
+    // Only update if there are changes
+    if (Object.keys(changedData).length > 0) {
+      onUpdate(changedData)
+    } else {
       onClose()
-      setFormData({
-        currentPassword: "",
-        newPassword: "",
-        confirmPassword: "",
-      })
-    }, 1500)
+    }
+  }
+
+  const handleClose = () => {
+    if (!isLoading) {
+      onClose()
+    }
   }
 
   return (
     <AnimatePresence>
       {isOpen && (
-        <Dialog open={isOpen} onOpenChange={onClose}>
-          <DialogContent className="sm:max-w-[425px]">
+        <Dialog open={isOpen} onOpenChange={handleClose}>
+          <DialogContent className="sm:max-w-[525px]">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -74,88 +117,129 @@ export function EditPasswordModal({ isOpen, onClose }: EditPasswordModalProps) {
               transition={{ duration: 0.2 }}
             >
               <DialogHeader>
-                <DialogTitle className="text-xl">Change Password</DialogTitle>
+                <DialogTitle className="text-xl">
+                  {personalInfoOnly ? "Edit Personal Information" : "Edit Profile"}
+                </DialogTitle>
               </DialogHeader>
-
-              {success ? (
-                <div className="py-6">
-                  <motion.div
-                    initial={{ scale: 0.8, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    transition={{ type: "spring", stiffness: 200, damping: 15 }}
-                    className="flex flex-col items-center justify-center py-4"
-                  >
-                    <div className="h-16 w-16 rounded-full bg-green-100 flex items-center justify-center mb-4">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="32"
-                        height="32"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        className="text-green-600"
-                      >
-                        <path d="M20 6L9 17l-5-5"></path>
-                      </svg>
+              <form onSubmit={handleSubmit} className="space-y-6 py-4">
+                {!personalInfoOnly && (
+                  <div className="flex items-center gap-4">
+                    <Avatar className="h-20 w-20">
+                      <AvatarImage src="/placeholder.svg?height=100&width=100" alt="Profile picture" />
+                      <AvatarFallback>
+                        {formData?.firstName?.charAt(0) || "U"}
+                        {formData?.lastName?.charAt(0) || ""}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <Button type="button" variant="outline" size="sm" className="mb-2" disabled={isLoading}>
+                        Change Photo
+                      </Button>
+                      <p className="text-xs text-muted-foreground">JPG, GIF or PNG. 1MB max.</p>
                     </div>
-                    <h3 className="text-lg font-medium text-center">Password Changed Successfully</h3>
-                  </motion.div>
+                  </div>
+                )}
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="firstName">First Name</Label>
+                    <Input
+                      id="firstName"
+                      name="firstName"
+                      value={formData.firstName}
+                      onChange={handleChange}
+                      placeholder="Enter first name"
+                      disabled={isLoading}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="lastName">Last Name</Label>
+                    <Input
+                      id="lastName"
+                      name="lastName"
+                      value={formData.lastName}
+                      onChange={handleChange}
+                      placeholder="Enter last name"
+                      disabled={isLoading}
+                    />
+                  </div>
                 </div>
-              ) : (
-                <form onSubmit={handleSubmit} className="space-y-4 py-4">
-                  {error && (
-                    <Alert variant="destructive" className="mb-4">
-                      <AlertCircle className="h-4 w-4" />
-                      <AlertDescription>{error}</AlertDescription>
-                    </Alert>
-                  )}
 
+                {!personalInfoOnly && (
                   <div className="space-y-2">
-                    <Label htmlFor="currentPassword">Current Password</Label>
+                    <Label htmlFor="userName">Username</Label>
+                    <div className="flex">
+                      <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-input bg-muted text-muted-foreground">
+                        @
+                      </span>
+                      <Input
+                        id="userName"
+                        name="userName"
+                        value={formData.userName}
+                        onChange={handleChange}
+                        className="rounded-l-none"
+                        placeholder="username"
+                        disabled={isLoading}
+                      />
+                    </div>
+                  </div>
+                )}
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="email">Email Address</Label>
                     <Input
-                      id="currentPassword"
-                      name="currentPassword"
-                      type="password"
-                      value={formData.currentPassword}
+                      id="email"
+                      name="email"
+                      type="email"
+                      value={formData.email}
                       onChange={handleChange}
+                      placeholder="Enter email address"
+                      disabled={isLoading}
                     />
                   </div>
-
                   <div className="space-y-2">
-                    <Label htmlFor="newPassword">New Password</Label>
+                    <Label htmlFor="phone">Phone</Label>
                     <Input
-                      id="newPassword"
-                      name="newPassword"
-                      type="password"
-                      value={formData.newPassword}
+                      id="phone"
+                      name="phone"
+                      value={formData.phone}
                       onChange={handleChange}
+                      placeholder="Enter phone number"
+                      disabled={isLoading}
                     />
                   </div>
+                </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="confirmPassword">Confirm New Password</Label>
-                    <Input
-                      id="confirmPassword"
-                      name="confirmPassword"
-                      type="password"
-                      value={formData.confirmPassword}
-                      onChange={handleChange}
-                    />
-                  </div>
+                <div className="space-y-2">
+                  <Label htmlFor="bio">Bio</Label>
+                  <Textarea
+                    id="bio"
+                    name="bio"
+                    value={formData.bio}
+                    onChange={handleChange}
+                    rows={4}
+                    placeholder="Tell us about yourself..."
+                    disabled={isLoading}
+                  />
+                </div>
 
-                  <DialogFooter className="pt-4">
-                    <Button type="button" variant="outline" onClick={onClose}>
-                      Cancel
-                    </Button>
-                    <Button type="submit" className="bg-green-500 hover:bg-green-600">
-                      Update Password
-                    </Button>
-                  </DialogFooter>
-                </form>
-              )}
+                <DialogFooter>
+                  <Button type="button" variant="outline" onClick={handleClose} disabled={isLoading}>
+                    Cancel
+                  </Button>
+                  <Button type="submit" className="bg-green-500 hover:bg-green-600" disabled={isLoading}>
+                    {isLoading ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Saving...
+                      </>
+                    ) : (
+                      "Save Changes"
+                    )}
+                  </Button>
+                </DialogFooter>
+              </form>
             </motion.div>
           </DialogContent>
         </Dialog>

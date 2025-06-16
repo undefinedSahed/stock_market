@@ -1,5 +1,4 @@
 "use client"
-import PathTracker from "../../_components/PathTracker"
 
 import type React from "react"
 
@@ -16,6 +15,7 @@ import dynamic from "next/dynamic"
 // Dynamically import Quill to avoid SSR issues
 const ReactQuill = dynamic(() => import("react-quill"), { ssr: false })
 import "react-quill/dist/quill.snow.css"
+import PathTracker from "../../_components/PathTracker"
 
 interface AdsFormData {
   adsTitle: string
@@ -264,43 +264,20 @@ const Page = () => {
                   Ads Gallery <span className="text-red-500">*</span>
                 </label>
 
-                {images.length > 0 ? (
-                  <div className="space-y-4">
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                      {images.map((image, index) => (
-                        <div key={index} className="relative group">
-                          <div className="aspect-square relative rounded-md overflow-hidden border border-[#b0b0b0]">
-                            <Image
-                              src={image.preview || "/placeholder.svg"}
-                              alt={`Preview ${index}`}
-                              fill
-                              className="object-cover"
-                            />
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => removeImage(index)}
-                            className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 shadow-md opacity-90 hover:opacity-100 transition-opacity"
-                          >
-                            <X className="h-4 w-4" />
-                          </button>
-                          <p className="text-xs text-gray-600 mt-1 truncate">
-                            {image.file.name} ({(image.file.size / 1024 / 1024).toFixed(2)} MB)
-                          </p>
-                        </div>
-                      ))}
-
+                <div className="border-2 border-dashed border-gray-300 rounded-md p-12 text-center hover:border-[#28a745] hover:bg-green-50 transition-colors">
+                  <div className="flex flex-col items-center justify-center space-y-2">
+                    <div className="h-12 w-12 text-gray-400">
+                      <Upload className="mx-auto h-12 w-12" />
+                    </div>
+                    <div className="flex text-sm text-gray-500">
                       <label
-                        htmlFor="file-upload-more"
-                        className="aspect-square flex items-center justify-center border-2 border-dashed border-[#b0b0b0] rounded-md cursor-pointer hover:border-[#28a745] hover:bg-green-50 transition-colors"
+                        htmlFor="file-upload"
+                        className="relative cursor-pointer font-medium text-[#28a745] hover:text-[#218838]"
                       >
-                        <div className="flex flex-col items-center space-y-1 text-gray-500">
-                          <Upload className="h-8 w-8" />
-                          <span className="text-xs">Add more</span>
-                        </div>
+                        <span>Drop your images here, or browse</span>
                         <input
-                          id="file-upload-more"
-                          name="file-upload-more"
+                          id="file-upload"
+                          name="file-upload"
                           type="file"
                           className="sr-only"
                           accept="image/jpeg,image/png,image/jpg,image/webp"
@@ -309,34 +286,39 @@ const Page = () => {
                         />
                       </label>
                     </div>
-                    <p className="text-sm text-gray-500">
-                      {images.length} image{images.length !== 1 ? "s" : ""} selected (Max 5MB per image)
-                    </p>
+                    <p className="text-xs text-gray-400">JPEG, PNG, JPG, WebP are allowed (Max 5MB per image)</p>
                   </div>
-                ) : (
-                  <div className="border-2 border-dashed border-gray-300 rounded-md p-12 text-center hover:border-[#28a745] hover:bg-green-50 transition-colors">
-                    <div className="flex flex-col items-center justify-center space-y-2">
-                      <div className="h-12 w-12 text-gray-400">
-                        <Upload className="mx-auto h-12 w-12" />
-                      </div>
-                      <div className="flex text-sm text-gray-500">
-                        <label
-                          htmlFor="file-upload"
-                          className="relative cursor-pointer font-medium text-[#28a745] hover:text-[#218838]"
-                        >
-                          <span>Drop your images here, or browse</span>
-                          <input
-                            id="file-upload"
-                            name="file-upload"
-                            type="file"
-                            className="sr-only"
-                            accept="image/jpeg,image/png,image/jpg,image/webp"
-                            onChange={handleImageUpload}
-                            multiple
-                          />
-                        </label>
-                      </div>
-                      <p className="text-xs text-gray-400">JPEG, PNG, JPG, WebP are allowed (Max 5MB per image)</p>
+                </div>
+                {/* Image Preview Section */}
+                {images.length > 0 && (
+                  <div className="mt-4">
+                    <h4 className="text-sm font-medium text-gray-700 mb-3">Uploaded Images ({images.length})</h4>
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                      {images.map((image, index) => (
+                        <div key={index} className="relative group">
+                          <div className="aspect-square rounded-lg overflow-hidden border-2 border-gray-200 hover:border-[#28a745] transition-colors">
+                            <Image
+                              src={image.preview || "/placeholder.svg"}
+                              alt={`Preview ${index + 1}`}
+                              width={200}
+                              height={200}
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => removeImage(index)}
+                            className="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200 shadow-lg"
+                            aria-label={`Remove image ${index + 1}`}
+                          >
+                            <X className="h-4 w-4" />
+                          </button>
+                          <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white text-xs p-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                            <p className="truncate">{image.file.name}</p>
+                            <p>{(image.file.size / 1024 / 1024).toFixed(2)} MB</p>
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   </div>
                 )}

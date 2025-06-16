@@ -46,6 +46,7 @@ const Page = () => {
   const [deleteModalOpen, setDeleteModalOpen] = useState(false)
   const [selectedInfluencer, setSelectedInfluencer] = useState<Influencer | null>(null)
   const [editForm, setEditForm] = useState({
+    id: "",
     userName: "",
     email: "",
     phoneNumber: "",
@@ -71,7 +72,7 @@ const Page = () => {
   // Update influencer mutation
   const updateInfluencerMutation = useMutation({
     mutationFn: async (data: { id: string; updateData: Partial<Influencer> }) => {
-      const response = await axiosInstance.put(`/admin/influencer/update/${data.id}`, data.updateData)
+      const response = await axiosInstance.post(`/user/update-user`, data.updateData)
       return response.data
     },
     onSuccess: () => {
@@ -84,7 +85,7 @@ const Page = () => {
   // Delete influencer mutation
   const deleteInfluencerMutation = useMutation({
     mutationFn: async (id: string) => {
-      const response = await axiosInstance.delete(`/admin/influencer/delete/${id}`)
+      const response = await axiosInstance.delete(`/admin/influencer/delete-influencer/${id}`)
       return response.data
     },
     onSuccess: () => {
@@ -97,6 +98,7 @@ const Page = () => {
   const handleEdit = (influencer: Influencer) => {
     setSelectedInfluencer(influencer)
     setEditForm({
+      id : influencer._id,
       userName: influencer.userName,
       email: influencer.email,
       phoneNumber: influencer.phoneNumber,
