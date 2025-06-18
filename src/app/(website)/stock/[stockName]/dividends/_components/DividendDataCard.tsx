@@ -1,7 +1,23 @@
 "use client"
+import useAxios from "@/hooks/useAxios";
+import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 
 export default function DividendDataCard() {
+
+  const axiosInstence = useAxios();
+
+  const {data : cardData} = useQuery({
+    queryKey : ["devident-card-data"],
+    queryFn : async () => {
+      const res = await axiosInstence(`/portfolio/dividends/AAPL`);
+      return res.data;
+    }
+  })
+
+  const cardData2 = cardData?.rawDividends?.length
+  const cardData3 = cardData?.rawDividends[cardData2 - 1]
+
   return (
     <div>
       <h2 className="text-xl font-bold mb-3">Dividend Data</h2>
@@ -12,10 +28,10 @@ export default function DividendDataCard() {
             <p className="text-sm text-gray-600 font-medium">
               Last Ex-Dividend Date
             </p>
-            <p className="text-base font-semibold mt-2">Feb 10, 2025</p>
+            <p className="text-base font-semibold mt-2">{cardData3?.date}</p>
             <div className="mt-3">
               <p className="text-xs text-gray-500">Payment Date</p>
-              <p className="text-xs text-gray-700">Feb 13, 2025</p>
+              <p className="text-xs text-gray-700">{cardData3?.payDate}</p>
             </div>
           </div>
 
@@ -24,7 +40,7 @@ export default function DividendDataCard() {
             <p className="text-sm text-gray-600 font-medium">
               Dividend Amount Per Share
             </p>
-            <p className="text-base font-semibold mt-2">$0.25</p>
+            <p className="text-base font-semibold mt-2">{cardData3?.amount}</p>
             <div className="mt-3">
               <p className="text-xs text-gray-700">Quarterly</p>
             </div>
@@ -33,7 +49,7 @@ export default function DividendDataCard() {
           {/* Dividend Yield */}
           <div className="p-4">
             <p className="text-sm text-gray-600 font-medium">Dividend Yield</p>
-            <p className="text-base font-semibold mt-2">0.46%</p>
+            <p className="text-base font-semibold mt-2">{cardData?.dividendYield}</p>
             <div className="mt-3">
               <p className="text-xs text-gray-500">Sector: Technology</p>
               <p className="text-xs text-gray-500">Sector Average: 0.71%</p>
@@ -43,13 +59,13 @@ export default function DividendDataCard() {
           {/* Payout Ratio */}
           <div className="p-4">
             <p className="text-sm text-gray-600 font-medium">Payout Ratio</p>
-            <p className="text-base font-semibold mt-2">14.35%</p>
+            <p className="text-base font-semibold mt-2">{cardData?.payoutRatio}</p>
           </div>
 
           {/* Dividend Growth */}
           <div className="p-4">
             <p className="text-sm text-gray-600 font-medium">Dividend Growth</p>
-            <p className="text-base font-semibold mt-2">13 years</p>
+            <p className="text-base font-semibold mt-2">{cardData?.dividendGrowth}</p>
             <div className="mt-3">
               <p className="text-xs text-gray-500">Since 2012</p>
             </div>

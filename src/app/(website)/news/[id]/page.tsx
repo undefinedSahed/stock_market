@@ -17,6 +17,7 @@ const Page = ({ params }: PageProps) => {
     },
   });
 
+  console.log(params)
   console.log(newsDetails);
 
   const { newsTitle, newsDescription } = newsDetails;

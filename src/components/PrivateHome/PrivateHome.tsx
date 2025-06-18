@@ -1,80 +1,111 @@
-"use client";
+"use client"
 
-import type React from "react";
+import type React from "react"
 
-import LatestArticles from "@/shared/Articles";
-import StockDashboard from "@/shared/StockDashboard";
-import Image from "next/image";
-import StockTickerCarousel from "../Watchlist/StockTickerCarousel";
-import Link from "next/link";
-import { useState, useRef, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { Search, Star, TrendingUp, TrendingDown } from "lucide-react";
-import useAxios from "@/hooks/useAxios";
-import { useDebounce } from "@/hooks/useDebounce";
+import LatestArticles from "@/shared/Articles"
+import StockDashboard from "@/shared/StockDashboard"
+import Image from "next/image"
+import StockTickerCarousel from "../Watchlist/StockTickerCarousel"
+import Link from "next/link"
+import { useState, useRef, useEffect } from "react"
+import { useQuery } from "@tanstack/react-query"
+import { Search, Star, TrendingUp, TrendingDown } from "lucide-react"
+import useAxios from "@/hooks/useAxios"
+import { useDebounce } from "@/hooks/useDebounce"
 
 interface StockResult {
-  symbol: string;
-  description: string;
-  flag: string;
-  price: number;
-  change: number;
-  percentChange: number;
+  symbol: string
+  description: string
+  flag: string
+  price: number
+  change: number
+  percentChange: number
+  logo?: string
+  exchange?: string
 }
 
 interface SearchResponse {
-  success: boolean;
-  results: StockResult[];
+  success: boolean
+  results: StockResult[]
+}
+
+interface NewsItem {
+  category: string
+  datetime: number
+  headline: string
+  id: number
+  image: string
+  related: string
+  source: string
+  summary: string
+  url: string
 }
 
 const PrivateHome = () => {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [showResults, setShowResults] = useState(false);
-  const searchRef = useRef<HTMLDivElement>(null);
-  const axiosInstance = useAxios();
+  const [searchQuery, setSearchQuery] = useState("")
+  const [showResults, setShowResults] = useState(false)
+  const searchRef = useRef<HTMLDivElement>(null)
+  const axiosInstance = useAxios()
 
   // TanStack Query for search
-  const debouncedQuery = useDebounce(searchQuery, 500); // wait 1 second
+  const debouncedQuery = useDebounce(searchQuery, 500) // wait 1 second
 
   const { data: searchData, isLoading } = useQuery<SearchResponse>({
     queryKey: ["stocks-search", debouncedQuery],
     queryFn: async () => {
-      const response = await axiosInstance.get(
-        `/stocks/search?q=${debouncedQuery}`
-      );
-      return response.data;
+      const response = await axiosInstance.get(`/stocks/search?q=${debouncedQuery}`)
+      return response.data
     },
     enabled: debouncedQuery.length > 0, // only fetch if query isn't empty
     staleTime: 30000,
-  });
+  })
 
   // Handle click outside to close dropdown
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (
-        searchRef.current &&
-        !searchRef.current.contains(event.target as Node)
-      ) {
-        setShowResults(false);
+      if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
+        setShowResults(false)
       }
-    };
+    }
 
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+    document.addEventListener("mousedown", handleClickOutside)
+    return () => document.removeEventListener("mousedown", handleClickOutside)
+  }, [])
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setSearchQuery(value);
-    setShowResults(value.length > 0);
-  };
+    const value = e.target.value
+    setSearchQuery(value)
+    setShowResults(value.length > 0)
+  }
 
   const handleStockSelect = (stock: StockResult) => {
-    setSearchQuery(stock.symbol);
-    setShowResults(false);
-    // Add your navigation logic here
-    console.log("Selected stock:", stock);
-  };
+    setSearchQuery(stock.symbol)
+    setShowResults(false)
+  }
+
+  const { data: stockNews = [] } = useQuery<NewsItem[]>({
+    queryKey: ["private-news"],
+    queryFn: async () => {
+      const res = await axiosInstance("/admin/news/market-news")
+      return res.data.data
+    },
+  })
+
+
+  // Helper function to format date
+  const formatDate = (timestamp: number) => {
+    return new Date(timestamp * 1000).toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    })
+  }
+
+  // Helper function to truncate text
+  const truncateText = (text: string, maxLength: number) => {
+    if (text.length <= maxLength) return text
+    return text.substring(0, maxLength) + "..."
+  }
 
   return (
     <div className="mt-28 container mx-auto px-4 sm:px-6 lg:px-8">
@@ -130,9 +161,7 @@ const PrivateHome = () => {
               <>
                 <div className="p-3 border-b border-gray-100 flex items-center gap-2">
                   <Star className="w-4 h-4 text-green-500" />
-                  <span className="text-sm font-medium text-gray-700">
-                    Search Results
-                  </span>
+                  <span className="text-sm font-medium text-gray-700">Search Results</span>
                 </div>
                 {searchData.results.map((stock, index) => (
                   <Link key={`${stock.symbol}-${index}`} href={`/search-result?q=${stock?.symbol}`}>
@@ -141,42 +170,34 @@ const PrivateHome = () => {
                       className="p-4 hover:bg-gray-50 cursor-pointer border-b border-gray-50 last:border-b-0 flex items-center justify-between"
                     >
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 bg-black rounded-full flex items-center justify-center text-white text-sm font-bold">
-                          {stock.symbol.charAt(0)}
+                        <div className="w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-bold">
+                          {stock?.logo && (
+                            <Image src={stock.logo || "/placeholder.svg"} alt="Company Logo" width={38} height={47} />
+                          )}
                         </div>
                         <div>
                           <div className="flex items-center gap-2">
-                            <span className="font-semibold text-gray-900">
-                              {stock.symbol}
-                            </span>
+                            <span className="font-semibold text-gray-900">{stock.symbol}</span>
                             <Image
-                              src={stock.flag}
+                              src={stock.flag || "/placeholder.svg"}
                               alt="Country flag"
                               width={4}
                               height={4}
                               className="w-4 h-4"
                               onError={(e) => {
-                                e.currentTarget.style.display = "none";
+                                e.currentTarget.style.display = "none"
                               }}
                             />
-                            <span className="text-sm text-gray-600">
-                              NASDAQ
-                            </span>
+                            <span className="text-sm text-gray-600">{stock.exchange}</span>
                           </div>
-                          <p className="text-sm text-gray-500">
-                            {stock.description}
-                          </p>
+                          <p className="text-sm text-gray-500">{stock.description}</p>
                         </div>
                       </div>
                       <div className="text-right">
-                        <div className="font-semibold text-gray-900">
-                          ${stock.price.toFixed(2)}
-                        </div>
+                        <div className="font-semibold text-gray-900">${stock.price.toFixed(2)}</div>
                         <div
                           className={`flex items-center gap-1 text-sm ${
-                            stock.change >= 0
-                              ? "text-green-600"
-                              : "text-red-600"
+                            stock.change >= 0 ? "text-green-600" : "text-red-600"
                           }`}
                         >
                           {stock.change >= 0 ? (
@@ -186,8 +207,7 @@ const PrivateHome = () => {
                           )}
                           <span>
                             {stock.change >= 0 ? "+" : ""}
-                            {stock.change.toFixed(2)} (
-                            {stock.percentChange.toFixed(2)}%)
+                            {stock.change.toFixed(2)} ({stock.percentChange.toFixed(2)}%)
                           </span>
                         </div>
                       </div>
@@ -205,209 +225,168 @@ const PrivateHome = () => {
       </div>
 
       <div className="mb-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-7 gap-6 lg:gap-10">
-        {/* this is 1 layout */}
+        {/* Layout 1 - Left Column */}
         <div className="col-span-1 lg:col-span-2">
-          <div>
-            <Image
-              src="/images/cart.png"
-              alt="Stock market chart"
-              width={500}
-              height={270}
-              className="w-full"
-              style={{ aspectRatio: "500 / 270" }}
-            />
+          {stockNews[0] && (
+            <Link href={stockNews[0].url} target="_blank" rel="noopener noreferrer">
+              <div className="cursor-pointer hover:opacity-90 transition-opacity">
+                <Image
+                  src={stockNews[0].image || "/placeholder.svg?height=270&width=500"}
+                  alt={stockNews[0].headline}
+                  width={500}
+                  height={270}
+                  className="w-full object-cover"
+                  style={{ aspectRatio: "500 / 270" }}
+                />
+                <div className="flex items-center gap-2 mt-2 mb-1">
+                  <span className="text-xs text-gray-500 uppercase font-medium">{stockNews[0].source}</span>
+                  <span className="text-xs text-gray-400">•</span>
+                  <span className="text-xs text-gray-500">{formatDate(stockNews[0].datetime)}</span>
+                </div>
+                <h1 className="font-medium mt-3 text-lg md:text-xl leading-tight">
+                  {truncateText(stockNews[0].headline, 80)}
+                </h1>
+                <p className="text-sm md:text-base text-gray-600 mt-2">{truncateText(stockNews[0].summary, 120)}</p>
+              </div>
+            </Link>
+          )}
 
-            <h1 className="font-medium mt-3 text-lg md:text-xl">
-              Lorem Ipsum&nbsp;is simply
-              <br className="hidden md:block" />
-              Lorem simply.
-            </h1>
-
-            <p className="text-sm md:text-base">
-              Lorem Ipsum&nbsp;is simply Lorem
-              <br className="hidden md:block" /> Lorem Ipsum&nbsp;is simply.
-            </p>
-          </div>
-
-          <div className="mt-6 md:mt-8">
-            <Image
-              src="/images/cart.png"
-              alt="Stock market chart"
-              width={500}
-              height={270}
-              className="w-full"
-              style={{ aspectRatio: "500 / 270" }}
-            />
-
-            <h1 className="font-medium mt-3 text-lg md:text-xl">
-              Lorem Ipsum&nbsp;is simply
-              <br className="hidden md:block" />
-              Lorem simply.
-            </h1>
-
-            <p className="text-sm md:text-base">
-              Lorem Ipsum&nbsp;is simply Lorem
-              <br className="hidden md:block" /> Lorem Ipsum&nbsp;is simply.
-            </p>
-          </div>
+          {stockNews[1] && (
+            <Link href={stockNews[1].url} target="_blank" rel="noopener noreferrer">
+              <div className="mt-6 md:mt-8 cursor-pointer hover:opacity-90 transition-opacity">
+                <Image
+                  src={stockNews[1].image || "/placeholder.svg?height=270&width=500"}
+                  alt={stockNews[1].headline}
+                  width={500}
+                  height={270}
+                  className="w-full object-cover"
+                  style={{ aspectRatio: "500 / 270" }}
+                />
+                <div className="flex items-center gap-2 mt-2 mb-1">
+                  <span className="text-xs text-gray-500 uppercase font-medium">{stockNews[1].source}</span>
+                  <span className="text-xs text-gray-400">•</span>
+                  <span className="text-xs text-gray-500">{formatDate(stockNews[1].datetime)}</span>
+                </div>
+                <h1 className="font-medium mt-3 text-lg md:text-xl leading-tight">
+                  {truncateText(stockNews[1].headline, 80)}
+                </h1>
+                <p className="text-sm md:text-base text-gray-600 mt-2">{truncateText(stockNews[1].summary, 120)}</p>
+              </div>
+            </Link>
+          )}
         </div>
 
-        {/* this is 2 layout */}
+        {/* Layout 2 - Center Column (Featured News) */}
         <div className="col-span-1 lg:col-span-3">
-          <Image
-            src="/images/cart.png"
-            alt="Stock market chart"
-            width={800}
-            height={450}
-            className="w-full"
-            style={{ aspectRatio: "800 / 450" }}
-          />
-          <h1 className="font-bold my-4 md:my-5 text-2xl md:text-[40px] w-full lg:w-[90%] mx-auto text-center leading-tight">
-            Want up to 11% Dividend Yield?
-          </h1>
-
-          <p className="w-full lg:w-[80%] mx-auto text-center text-sm md:text-base">
-            Lorem Ipsum&nbsp;is simply dummy text of the printing and
-            typesetting industry.&nbsp;
-          </p>
+          {stockNews[73] && (
+            <Link href={stockNews[2].url} target="_blank" rel="noopener noreferrer">
+              <div className="cursor-pointer hover:opacity-90 transition-opacity">
+                <Image
+                  src={stockNews[2].image || "/placeholder.svg?height=450&width=800"}
+                  alt={stockNews[2].headline}
+                  width={800}
+                  height={450}
+                  className="w-full object-cover"
+                  style={{ aspectRatio: "800 / 450" }}
+                />
+                <div className="flex items-center justify-center gap-2 mt-4 mb-2">
+                  <span className="text-sm text-gray-500 uppercase font-medium">{stockNews[2].source}</span>
+                  <span className="text-sm text-gray-400">•</span>
+                  <span className="text-sm text-gray-500">{formatDate(stockNews[2].datetime)}</span>
+                  <span className="text-sm text-gray-400">•</span>
+                  <span className="text-xs text-blue-600 uppercase font-medium px-2 py-1 bg-blue-50 rounded">
+                    {stockNews[2].category}
+                  </span>
+                </div>
+                <h1 className="font-bold my-4 md:my-5 text-2xl md:text-[40px] w-full lg:w-[90%] mx-auto text-center leading-tight">
+                  {stockNews[2].headline}
+                </h1>
+                <p className="w-full lg:w-[80%] mx-auto text-center text-sm md:text-base text-gray-600">
+                  {stockNews[2].summary}
+                </p>
+              </div>
+            </Link>
+          )}
         </div>
 
-        {/* this is 3 layout */}
+        {/* Layout 3 - Right Column */}
         <div className="col-span-1 lg:col-span-2">
-          <div>
-            <Image
-              src="/images/cart.png"
-              alt="Stock market chart"
-              width={500}
-              height={270}
-              className="w-full"
-              style={{ aspectRatio: "500 / 270" }}
-            />
+          {stockNews[3] && (
+            <Link href={stockNews[3].url} target="_blank" rel="noopener noreferrer">
+              <div className="cursor-pointer hover:opacity-90 transition-opacity">
+                <Image
+                  src={stockNews[3].image || "/placeholder.svg?height=270&width=500"}
+                  alt={stockNews[3].headline}
+                  width={500}
+                  height={270}
+                  className="w-full object-cover"
+                  style={{ aspectRatio: "500 / 270" }}
+                />
+                <div className="flex items-center gap-2 mt-2 mb-1">
+                  <span className="text-xs text-gray-500 uppercase font-medium">{stockNews[3].source}</span>
+                  <span className="text-xs text-gray-400">•</span>
+                  <span className="text-xs text-gray-500">{formatDate(stockNews[3].datetime)}</span>
+                </div>
+                <h1 className="font-medium mt-3 text-lg md:text-xl leading-tight">
+                  {truncateText(stockNews[3].headline, 80)}
+                </h1>
+                <p className="text-sm md:text-base text-gray-600 mt-2">{truncateText(stockNews[3].summary, 120)}</p>
+              </div>
+            </Link>
+          )}
 
-            <h1 className="font-medium mt-3 text-lg md:text-xl">
-              Lorem Ipsum&nbsp;is simply
-              <br className="hidden md:block" />
-              Lorem simply.
-            </h1>
-
-            <p className="text-sm md:text-base">
-              Lorem Ipsum&nbsp;is simply Lorem
-              <br className="hidden md:block" /> Lorem Ipsum&nbsp;is simply.
-            </p>
-          </div>
-
-          <div className="mt-6 md:mt-8">
-            <Image
-              src="/images/cart.png"
-              alt="Stock market chart"
-              width={500}
-              height={270}
-              className="w-full"
-              style={{ aspectRatio: "500 / 270" }}
-            />
-
-            <h1 className="font-medium mt-3 text-lg md:text-xl">
-              Lorem Ipsum&nbsp;is simply
-              <br className="hidden md:block" />
-              Lorem simply.
-            </h1>
-
-            <p className="text-sm md:text-base">
-              Lorem Ipsum&nbsp;is simply Lorem
-              <br className="hidden md:block" /> Lorem Ipsum&nbsp;is simply.
-            </p>
-          </div>
+          {stockNews[4] && (
+            <Link href={stockNews[4].url} target="_blank" rel="noopener noreferrer">
+              <div className="mt-6 md:mt-8 cursor-pointer hover:opacity-90 transition-opacity">
+                <Image
+                  src={stockNews[4].image || "/placeholder.svg?height=270&width=500"}
+                  alt={stockNews[4].headline}
+                  width={500}
+                  height={270}
+                  className="w-full object-cover"
+                  style={{ aspectRatio: "500 / 270" }}
+                />
+                <div className="flex items-center gap-2 mt-2 mb-1">
+                  <span className="text-xs text-gray-500 uppercase font-medium">{stockNews[4].source}</span>
+                  <span className="text-xs text-gray-400">•</span>
+                  <span className="text-xs text-gray-500">{formatDate(stockNews[4].datetime)}</span>
+                </div>
+                <h1 className="font-medium mt-3 text-lg md:text-xl leading-tight">
+                  {truncateText(stockNews[4].headline, 80)}
+                </h1>
+                <p className="text-sm md:text-base text-gray-600 mt-2">{truncateText(stockNews[4].summary, 120)}</p>
+              </div>
+            </Link>
+          )}
         </div>
       </div>
 
+      {/* Horizontal News Cards Row */}
       <div className="flex flex-col md:flex-row justify-between items-center my-8 md:my-16 gap-4 md:gap-2">
-        <div className="flex gap-2 items-center">
-          <div>
-            <Image
-              src="/images/cart.png"
-              alt="Stock market chart"
-              width={88}
-              height={56}
-              className="rounded-2xl"
-            />
-          </div>
-
-          <div>
-            <h1 className="font-bold text-[14px] leading-tight">
-              Lorem Ipsum&nbsp;is simply
-              <br className="hidden md:inline" /> Lorem simply.{" "}
-            </h1>
-            <p className="text-[12px] md:text-[14px]">
-              Lorem Ipsum&nbsp;is simply.{" "}
-            </p>
-          </div>
-        </div>
-
-        <div className="flex gap-2 items-center">
-          <div>
-            <Image
-              src="/images/cart.png"
-              alt="Stock market chart"
-              width={88}
-              height={56}
-              className="rounded-2xl"
-            />
-          </div>
-
-          <div>
-            <h1 className="font-bold text-[14px] leading-tight">
-              Lorem Ipsum&nbsp;is simply
-              <br className="hidden md:inline" /> Lorem simply.{" "}
-            </h1>
-            <p className="text-[12px] md:text-[14px]">
-              Lorem Ipsum&nbsp;is simply.{" "}
-            </p>
-          </div>
-        </div>
-
-        <div className="flex gap-2 items-center">
-          <div>
-            <Image
-              src="/images/cart.png"
-              alt="Stock market chart"
-              width={88}
-              height={56}
-              className="rounded-2xl"
-            />
-          </div>
-
-          <div>
-            <h1 className="font-bold text-[14px] leading-tight">
-              Lorem Ipsum&nbsp;is simply
-              <br className="hidden md:inline" /> Lorem simply.{" "}
-            </h1>
-            <p className="text-[12px] md:text-[14px]">
-              Lorem Ipsum&nbsp;is simply.{" "}
-            </p>
-          </div>
-        </div>
-
-        <div className="flex gap-2 items-center">
-          <div>
-            <Image
-              src="/images/cart.png"
-              alt="Stock market chart"
-              width={88}
-              height={56}
-              className="rounded-2xl"
-            />
-          </div>
-
-          <div>
-            <h1 className="font-bold text-[14px] leading-tight">
-              Lorem Ipsum&nbsp;is simply
-              <br className="hidden md:inline" /> Lorem simply.{" "}
-            </h1>
-            <p className="text-[12px] md:text-[14px]">
-              Lorem Ipsum&nbsp;is simply.{" "}
-            </p>
-          </div>
-        </div>
+        {stockNews.slice(5, 9).map((news) => (
+          <Link key={news.id} href={news.url} target="_blank" rel="noopener noreferrer">
+            <div className="flex gap-2 items-center cursor-pointer hover:opacity-90 transition-opacity">
+              <div>
+                <Image
+                  src={news.image || "/placeholder.svg?height=56&width=88"}
+                  alt={news.headline}
+                  width={88}
+                  height={56}
+                  className="rounded-2xl object-cover"
+                />
+              </div>
+              <div className="max-w-[200px]">
+                <div className="flex items-center gap-1 mb-1">
+                  <span className="text-[10px] text-gray-500 uppercase font-medium">{news.source}</span>
+                  <span className="text-[10px] text-gray-400">•</span>
+                  <span className="text-[10px] text-gray-500">{formatDate(news.datetime)}</span>
+                </div>
+                <h1 className="font-bold text-[14px] leading-tight">{truncateText(news.headline, 60)}</h1>
+                <p className="text-[12px] md:text-[14px] text-gray-600 mt-1">{truncateText(news.summary, 50)}</p>
+              </div>
+            </div>
+          </Link>
+        ))}
       </div>
 
       <div className="mb-12 md:mb-16">
@@ -425,8 +404,7 @@ const PrivateHome = () => {
         </div>
 
         <p className="mt-4 md:mt-5 text-sm md:text-base">
-          Lorem, ipsum dolor sit amet consectetur adipisicing elit. Voluptatem,
-          minima.
+          Lorem, ipsum dolor sit amet consectetur adipisicing elit. Voluptatem, minima.
         </p>
       </div>
 
@@ -438,7 +416,7 @@ const PrivateHome = () => {
         <StockDashboard />
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default PrivateHome;
+export default PrivateHome

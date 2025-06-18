@@ -2,6 +2,7 @@ import { Check } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import Image from "next/image"
+import Link from "next/link"
 
 export default function StockPremiumBanner() {
     return (
@@ -30,10 +31,12 @@ export default function StockPremiumBanner() {
                             </div>
 
                             <div className="flex flex-col sm:flex-row items-center gap-4">
-                                <Button className="bg-green-500 hover:bg-green-600 text-white w-full sm:w-auto">Subscribe Now</Button>
-                                <a href="#" className="text-blue-500 hover:underline text-sm">
+                                <Link href="/explore-plan">
+                                    <Button className="bg-green-500 hover:bg-green-600 text-white w-full sm:w-auto">Subscribe Now</Button>
+                                </Link>
+                                <Link href="/explore-plan" className="text-blue-500 hover:underline text-sm">
                                     See Plans & Pricing
-                                </a>
+                                </Link>
                             </div>
                         </div>
 

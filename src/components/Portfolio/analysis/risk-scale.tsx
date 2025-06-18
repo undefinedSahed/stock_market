@@ -63,7 +63,7 @@ export default function RiskScale({ myPosition, avgPosition }: RiskScaleProps) {
                             <div className="flex flex-col items-center">
                                 <ArrowUp className="h-4 w-4 text-gray-600" />
                                 <span className="text-xs text-center">
-                                    Avg. Murakkab
+                                    Avg. Olive Stock&apos;s
                                     <br />
                                     Portfolio
                                 </span>

@@ -2,13 +2,15 @@
 
 import type React from "react"
 
-import { useState, useEffect } from "react"
+import { useEffect } from "react"
 import { ChevronDown, X, Check } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Badge } from "@/components/ui/badge"
-import { getStockInfo, stockData } from "@/lib/dummy-data"
+import { useSession } from "next-auth/react"
+import { useMutation, useQuery } from "@tanstack/react-query"
+import { usePortfolio } from "../portfolioContext"
 
 // Color palette for comparison stocks only - must match the ones in stock-chart.tsx
 const comparisonColors = {
@@ -43,20 +45,64 @@ export default function StockHeader({
     onToggleComparison,
     onClearComparisons,
 }: StockHeaderProps) {
-    const [stockInfo, setStockInfo] = useState({
-        price: 0,
-        change: 0,
-        changePercent: 0,
-    })
+
+    const { data: session } = useSession();
+    const { selectedPortfolioId } = usePortfolio(); // Use selectedPortfolioId from context
+
+    // Fetch portfolio data for selected ID
+    const { data: portfolioData } = useQuery({
+        queryKey: ["portfolio", selectedPortfolioId], // add selectedPortfolioId to the query key
+        queryFn: async () => {
+            // If selectedPortfolioId is undefined (initial load before a selection), prevent the fetch.
+            // The `enabled` prop below also handles this, but it's good to be explicit here too.
+            if (!selectedPortfolioId) {
+                return null;
+            }
+            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/portfolio/get/${selectedPortfolioId}`, {
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${session?.user?.accessToken}`,
+                },
+            });
+            const data = await res.json();
+            return data;
+        },
+        enabled: !!session?.user?.accessToken && !!selectedPortfolioId, // only run when both are available
+    });
+
+
+    const { mutate: getOverview, data: overviewData } = useMutation({
+        mutationFn: async (holdings: { symbol: string; shares: number }[]) => {
+            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/portfolio/overview`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ holdings }),
+            });
+
+            if (!res.ok) {
+                throw new Error("Failed to fetch portfolio overview");
+            }
+
+            return res.json();
+        },
+    });
+
 
     useEffect(() => {
-        if (!selectedStock) return
+        if (portfolioData && portfolioData.stocks && portfolioData.stocks.length > 0) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const holdings = portfolioData.stocks.map((stock: any) => ({
+                symbol: stock.symbol,
+                shares: stock.quantity,
+            }));
+            getOverview(holdings);
+        }
+        // No need to set selectedPortfolioId here, as it's now controlled by the context
+    }, [portfolioData, getOverview]);
 
-        const info = getStockInfo(selectedStock)
-        setStockInfo(info)
-    }, [selectedStock])
 
-    
     // Update stock info when selected stock changes
 
     // const handleStockChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -73,21 +119,6 @@ export default function StockHeader({
         <div className="space-y-4">
             <div className="flex flex-wrap items-center justify-between gap-2">
                 <div className="flex items-center gap-2">
-                    {/* <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <Button variant="outline" size="sm" className="gap-1">
-                                Studies <ChevronDown className="h-4 w-4" />
-                            </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent>
-                            <DropdownMenuItem>Moving Average</DropdownMenuItem>
-                            <DropdownMenuItem>Bollinger Bands</DropdownMenuItem>
-                            <DropdownMenuItem>RSI</DropdownMenuItem>
-                            <DropdownMenuItem>MACD</DropdownMenuItem>
-                        </DropdownMenuContent>
-                    </DropdownMenu> */}
-
-
                     {comparisonStocks && onToggleComparison &&
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
@@ -99,8 +130,8 @@ export default function StockHeader({
                                 <DropdownMenuItem disabled className="text-xs font-semibold text-muted-foreground">
                                     Select stocks to compare
                                 </DropdownMenuItem>
-                                {stockData.map(
-                                    (stock) =>
+                                {overviewData?.holdings?.map(
+                                    (stock: { symbol: string; shares: number }) =>
                                         stock.symbol !== selectedStock && (
                                             <DropdownMenuItem
                                                 key={stock.symbol}
@@ -113,7 +144,7 @@ export default function StockHeader({
                                                         style={{ backgroundColor: getComparisonColor(stock.symbol) }}
                                                     ></div>
                                                     <span>
-                                                        {stock.symbol} - {stock.name}
+                                                        {stock.symbol}
                                                     </span>
                                                 </div>
                                                 {comparisonStocks?.includes(stock.symbol) && <Check className="h-4 w-4 text-green-500" />}
@@ -128,33 +159,6 @@ export default function StockHeader({
                             </DropdownMenuContent>
                         </DropdownMenu>
                     }
-
-
-                    {/* <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <Button variant="outline" size="sm" className="gap-1">
-                                <BarChart2 className="h-4 w-4" />
-                                <ChevronDown className="h-4 w-4" />
-                            </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent>
-                            <DropdownMenuItem>Line Chart</DropdownMenuItem>
-                            <DropdownMenuItem>Candlestick Chart</DropdownMenuItem>
-                            <DropdownMenuItem>OHLC Chart</DropdownMenuItem>
-                        </DropdownMenuContent>
-                    </DropdownMenu> */}
-
-                    {/* <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <Button variant="outline" size="sm" className="gap-1">
-                                ID <ChevronDown className="h-4 w-4" />
-                            </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent>
-                            <DropdownMenuItem>Indicators</DropdownMenuItem>
-                            <DropdownMenuItem>Drawings</DropdownMenuItem>
-                        </DropdownMenuContent>
-                    </DropdownMenu> */}
                 </div>
 
                 <Tabs value={timeframe} onValueChange={onTimeframeChange} className="h-9 pb-16 md:pb-0">
@@ -169,35 +173,11 @@ export default function StockHeader({
                         <TabsTrigger value="5Y">5Y</TabsTrigger>
                     </TabsList>
                 </Tabs>
-
-                {/* <div className="flex items-center gap-1">
-                    <Button variant="ghost" size="icon">
-                        <Edit className="h-4 w-4" />
-                    </Button>
-                    <Button variant="ghost" size="icon">
-                        <Settings className="h-4 w-4" />
-                    </Button>
-                    <Button variant="ghost" size="icon">
-                        <Maximize2 className="h-4 w-4" />
-                    </Button>
-                </div> */}
             </div>
 
             <div className="flex flex-wrap items-center justify-between gap-2">
                 <div className="flex items-center gap-2">
                     <div className="font-bold text-xl">{selectedStock}</div>
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <Button variant="outline" size="sm" className="gap-1">
-                                ${stockInfo.price.toFixed(2)} <ChevronDown className="h-4 w-4" />
-                            </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent>
-                            <DropdownMenuItem>Price</DropdownMenuItem>
-                            <DropdownMenuItem>Change</DropdownMenuItem>
-                            <DropdownMenuItem>% Change</DropdownMenuItem>
-                        </DropdownMenuContent>
-                    </DropdownMenu>
                     <Button variant="ghost" size="sm" className="text-muted-foreground">
                         Volume
                     </Button>
@@ -221,26 +201,6 @@ export default function StockHeader({
                             )}
                         </div>
                     )
-                }
-
-                {comparisonStocks && onToggleComparison &&
-
-                    <div className="flex items-center gap-2">
-                        <div className="text-sm text-muted-foreground">Choose Stocks:</div>
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button variant="outline" size="sm" className="gap-1">
-                                    Popular Stocks <ChevronDown className="h-4 w-4" />
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent>
-                                <DropdownMenuItem>Tech Stocks</DropdownMenuItem>
-                                <DropdownMenuItem>Financial Stocks</DropdownMenuItem>
-                                <DropdownMenuItem>Energy Stocks</DropdownMenuItem>
-                                <DropdownMenuItem>Healthcare Stocks</DropdownMenuItem>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-                    </div>
                 }
             </div>
         </div>

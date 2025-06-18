@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { Area, AreaChart, CartesianGrid, XAxis } from "recharts";
+import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   ChartConfig,
@@ -11,6 +11,7 @@ import {
 import { useQuery } from "@tanstack/react-query";
 import useAxios from "@/hooks/useAxios";
 import { useSearchParams } from "next/navigation";
+// import { YAxis } from "@/components/ui/media-chart/media-chart";
 
 const chartConfig = {
   desktop: {
@@ -73,10 +74,10 @@ const PriceChart = () => {
     }
 
     return chartData
-      .filter((item) => item.time >= startTime)
+      .filter((item) => item.time >= startTime && !isNaN(item.close))
       .map((item) => ({
         time: new Date(item.time).toLocaleDateString(),
-        price: item.close,
+        price: Number(item.close) || 0, // Ensure price is a number, fallback 0 if invalid
         volume: item.volume,
       }));
   };
@@ -161,7 +162,7 @@ const PriceChart = () => {
         <Card>
           <CardContent>
             <ChartContainer config={chartConfig} className="w-full h-[400px]">
-              <AreaChart
+              {/* <AreaChart
                 accessibilityLayer
                 data={getFilteredChartData(priceData?.chart || [], isActive)}
                 margin={{
@@ -195,7 +196,102 @@ const PriceChart = () => {
                   fillOpacity={0.3}
                   stroke="#139430"
                 />
+              </AreaChart> */}
+              <AreaChart
+                accessibilityLayer
+                data={getFilteredChartData(priceData?.chart || [], isActive)}
+                margin={{
+                  left: 12,
+                  right: 12,
+                }}
+              >
+                <CartesianGrid vertical={false} />
+                <XAxis
+                  dataKey="time"
+                  tickLine={false}
+                  axisLine={false}
+                  tickMargin={8}
+                  tickFormatter={(value) => {
+                    const date = new Date(value);
+                    return date.toLocaleDateString("en-US", {
+                      month: "short",
+                      day: "numeric",
+                    });
+                  }}
+                />
+                <YAxis
+                  tickLine={false}
+                  axisLine={false}
+                  tickMargin={10}
+                  domain={(
+                    [dataMin, dataMax]: [number, number],
+                    // allowDataOverflow: boolean
+                  ) => {
+                    if (isNaN(dataMin) || isNaN(dataMax)) {
+                      // fallback domain if invalid values detected
+                      return [0, 1];
+                    }
+                      if (!isFinite(dataMin) || !isFinite(dataMax)) {
+    return [0, 100]; // or any default range you prefer
+  }
+                    const center = (dataMin + dataMax) / 2;
+                    const range = Math.max((dataMax - dataMin) * 1.2, 1);
+                    return [center - range / 2, center + range / 2];
+                  }}
+                />
+
+                <ChartTooltip
+                  cursor={false}
+                  content={<ChartTooltipContent indicator="dot" hideLabel />}
+                />
+                <Area
+                  dataKey="price"
+                  type="linear"
+                  fill="green"
+                  fillOpacity={0.3}
+                  stroke="#139430"
+                />
               </AreaChart>
+
+              {/* <AreaChart
+                data={getFilteredChartData(priceData?.chart || [], isActive)}
+                margin={{ left: 12, right: 12 }}
+              >
+                <CartesianGrid vertical={false} />
+                <XAxis
+                  dataKey="time"
+                  tickLine={false}
+                  axisLine={false}
+                  tickMargin={8}
+                  tickFormatter={(value) => {
+                    const date = new Date(value);
+                    return date.toLocaleDateString("en-US", {
+                      month: "short",
+                      day: "numeric",
+                    });
+                  }}
+                />
+                <YAxis
+                  tickLine={false}
+                  axisLine={false}
+                  tickMargin={10}
+                  domain={(dataMin: number, dataMax: number) => {
+                    const padding = Math.max((dataMax - dataMin) * 0.1, 1); // Add padding to make it look more like stock chart
+                    return [dataMin - padding, dataMax + padding];
+                  }}
+                />
+                <ChartTooltip
+                  cursor={false}
+                  content={<ChartTooltipContent indicator="dot" hideLabel />}
+                />
+                <Area
+                  dataKey="price"
+                  type="monotone" // Smooth line
+                  fill="green"
+                  fillOpacity={0.3}
+                  stroke="#139430"
+                />
+              </AreaChart> */}
             </ChartContainer>
           </CardContent>
         </Card>

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -13,40 +13,133 @@ import {
     DialogTitle,
     DialogTrigger,
 } from "@/components/ui/dialog"
-import {
-    AlertDialog,
-    AlertDialogAction,
-    AlertDialogCancel,
-    AlertDialogContent,
-    AlertDialogDescription,
-    AlertDialogFooter,
-    AlertDialogHeader,
-    AlertDialogTitle,
-    AlertDialogTrigger,
-} from "@/components/ui/alert-dialog"
 import { Pencil, Mail, Phone, Lock } from "lucide-react"
-import { BiUser } from "react-icons/bi";
+import { BiUser } from "react-icons/bi"
 
-import { useToast } from "@/hooks/use-toast"
 import SubscriptionCard from "./subscription-card"
 import FeedbackCard from "./feedback-card"
+import { useSession } from "next-auth/react"
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
+import { toast } from "sonner"
 
-// Mock initial data
-const initialUserData = {
-    fullName: "Alex Mitchell",
-    emailAddress: "alex.mitchell@example.com",
-    phoneNumber: "+1 (555) 123-4567",
-    password: "••••••",
+// Define a proper type instead of using `any`
+interface ProfileData {
+    fullName: string
+    email: string
+    imageLink?: string
+    phoneNumber?: string
+    address?: string
 }
 
 export default function PersonalDetailsCard() {
-    const [userData, setUserData] = useState(initialUserData)
+    const { data: session } = useSession()
+    const userId = session?.user?.id
+    const queryClient = useQueryClient()
+
+    const { data: user } = useQuery({
+        queryKey: ["user"],
+        queryFn: async () => {
+            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/user/get-user/${userId}`)
+            const data = await res.json()
+            return data
+        },
+        select: (data) => data?.data,
+        enabled: !!userId,
+    })
+
+    const [userData, setUserData] = useState({
+        userName: session?.user?.name || "",
+        fullName: "",
+        email: "",
+        phoneNumber: "",
+        address: "",
+        password: "••••••",
+    })
+
     const [editingField, setEditingField] = useState<string | null>(null)
     const [tempValue, setTempValue] = useState("")
     const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false)
+    const [oldPassword, setOldPassword] = useState("") // Added oldPassword state
     const [newPassword, setNewPassword] = useState("")
     const [confirmPassword, setConfirmPassword] = useState("")
-    const { toast } = useToast()
+
+    useEffect(() => {
+        if (user) {
+            setUserData({
+                userName: session?.user?.name || "",
+                fullName: user.fullName || "",
+                email: user.email || "",
+                phoneNumber: user.phoneNumber || "",
+                address: user.address || "",
+                password: "••••••",
+            })
+        }
+    }, [user, session?.user?.name])
+
+    const updateProfileMutation = useMutation({
+        mutationFn: async (profileData: ProfileData) => {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/user/update-user`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${session?.user?.accessToken}`,
+                },
+                body: JSON.stringify({
+                    id: userId,
+                    userName: session?.user?.name,
+                    fullName: profileData.fullName,
+                    email: profileData.email,
+                    imageLink: profileData.imageLink || "",
+                    phoneNumber: profileData.phoneNumber || "",
+                    address: profileData.address || "",
+                }),
+            })
+
+            if (!response.ok) throw new Error("Failed to update profile")
+
+            return response.json()
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["user"] })
+            toast.success("Profile updated successfully!")
+        },
+        onError: (error: unknown) => {
+            const message = error instanceof Error ? error.message : "Failed to update profile"
+            toast.error(message)
+        },
+    })
+
+    const resetPasswordMutation = useMutation({
+        mutationFn: async ({ oldPassword, newPassword }: { oldPassword: string; newPassword: string }) => {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/change-password`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${session?.user?.accessToken}`,
+                },
+                body: JSON.stringify({
+                    userId: session?.user?.id,
+                    oldPassword: oldPassword,
+                    newPassword: newPassword,
+                }),
+            })
+
+            if (!response.ok) throw new Error("Failed to reset password")
+
+            return response.json()
+        },
+        onSuccess: () => {
+            toast.success("Password updated successfully!")
+            setIsPasswordDialogOpen(false)
+            setOldPassword("") // Clear old password on success
+            setNewPassword("")
+            setConfirmPassword("")
+        },
+        onError: (error) => {
+            const message = error instanceof Error ? error.message : "Failed to reset password";
+            toast.error(message)
+        },
+    })
 
     const handleEdit = (field: string, value: string) => {
         setEditingField(field)
@@ -55,85 +148,42 @@ export default function PersonalDetailsCard() {
 
     const handleSave = (field: string) => {
         if (field === "phoneNumber" && !isValidPhoneNumber(tempValue)) {
-            toast({
-                title: "Invalid phone number",
-                description: "Please enter a valid phone number",
-                variant: "destructive",
-            })
+            toast.error("Invalid phone number")
             return
         }
 
-        if (field === "emailAddress" && !isValidEmail(tempValue)) {
-            toast({
-                title: "Invalid email",
-                description: "Please enter a valid email address",
-                variant: "destructive",
-            })
-            return
-        }
-
-        setUserData({ ...userData, [field]: tempValue })
+        const updatedData = { ...userData, [field]: tempValue }
+        setUserData(updatedData)
         setEditingField(null)
+        toast.success("Changes saved locally")
     }
 
-    const handleCancel = () => {
-        setEditingField(null)
-    }
+    const handleCancel = () => setEditingField(null)
 
     const handlePasswordChange = () => {
+        if (!oldPassword) {
+            toast.error("Please enter your old password");
+            return;
+        }
+
         if (newPassword !== confirmPassword) {
-            toast({
-                title: "Passwords don't match",
-                description: "Please make sure your passwords match",
-                variant: "destructive",
-            })
+            toast.error("New and confirm passwords don't match")
             return
         }
 
         if (newPassword.length < 6) {
-            toast({
-                title: "Password too short",
-                description: "Password must be at least 6 characters long",
-                variant: "destructive",
-            })
+            toast.error("New password is too short (minimum 6 characters)")
             return
         }
 
-        setUserData({ ...userData, password: "••••••" })
-        setIsPasswordDialogOpen(false)
-        setNewPassword("")
-        setConfirmPassword("")
-
-        toast({
-            title: "Password updated",
-            description: "Your password has been successfully updated",
-        })
-    }
-
-    const handleDeleteAccount = () => {
-        // In a real app, this would call an API to delete the account
-        setUserData(initialUserData)
-        toast({
-            title: "Account deleted",
-            description: "Your account has been successfully deleted",
-        })
+        resetPasswordMutation.mutate({ oldPassword, newPassword })
     }
 
     const handleSaveChanges = () => {
-        // In a real app, this would call an API to save all changes
-        toast({
-            title: "Changes saved",
-            description: "Your personal details have been updated",
-        })
+        updateProfileMutation.mutate(userData)
     }
 
-    const isValidEmail = (email: string) => {
-        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
-    }
-
-    const isValidPhoneNumber = (phone: string) => {
-        return /^\+?[0-9\s\-()]{10,20}$/.test(phone)
-    }
+    const isValidPhoneNumber = useCallback((phone: string) => /^\+?[0-9\s\-()]{10,20}$/.test(phone), [])
 
     return (
         <div className="md:grid md:grid-cols-2 lg:grid-cols-9 gap-5 mb-32">
@@ -150,7 +200,11 @@ export default function PersonalDetailsCard() {
                                 <p className="text-xs text-[#737373]">Full Name</p>
                                 {editingField === "fullName" ? (
                                     <div className="flex space-x-2">
-                                        <Input value={tempValue} onChange={(e) => setTempValue(e.target.value)} className="flex-1 text-sm font-medium text-[#000000]" />
+                                        <Input
+                                            value={tempValue}
+                                            onChange={(e) => setTempValue(e.target.value)}
+                                            className="flex-1 text-sm font-medium text-[#000000]"
+                                        />
                                         <Button size="sm" onClick={() => handleSave("fullName")}>
                                             Save
                                         </Button>
@@ -160,8 +214,8 @@ export default function PersonalDetailsCard() {
                                     </div>
                                 ) : (
                                     <div className="flex items-center justify-between">
-                                        <p className="text-sm font-medium">{userData.fullName}</p>
-                                        <Button variant="ghost" size="icon" onClick={() => handleEdit("fullName", userData.fullName)}>
+                                        <p className="text-sm font-medium">{userData?.fullName}</p>
+                                        <Button variant="ghost" size="icon" onClick={() => handleEdit("fullName", userData?.fullName)}>
                                             <Pencil className="h-4 w-4" />
                                         </Button>
                                     </div>
@@ -169,45 +223,31 @@ export default function PersonalDetailsCard() {
                             </div>
                         </div>
 
-                        {/* Email Address */}
+                        {/* Email */}
                         <div className="flex items-center space-x-3 bg-[#F9FAFB] px-4 py-3 rounded-md">
                             <Mail className="h-7 w-7 text-[#737373]" />
                             <div className="flex-1">
                                 <p className="text-xs text-[#737373]">Email Address</p>
-                                {editingField === "emailAddress" ? (
-                                    <div className="flex space-x-2">
-                                        <Input
-                                            value={tempValue}
-                                            onChange={(e) => setTempValue(e.target.value)}
-                                            className="flex-1 text-sm font-medium text-[#000000]"
-                                            type="email"
-                                        />
-                                        <Button size="sm" onClick={() => handleSave("emailAddress")}>
-                                            Save
-                                        </Button>
-                                        <Button size="sm" variant="outline" onClick={handleCancel}>
-                                            Cancel
-                                        </Button>
-                                    </div>
-                                ) : (
-                                    <div className="flex items-center justify-between">
-                                        <p className="text-sm font-medium">{userData.emailAddress}</p>
-                                        <Button variant="ghost" size="icon" onClick={() => handleEdit("emailAddress", userData.emailAddress)}>
-                                            <Pencil className="h-4 w-4" />
-                                        </Button>
-                                    </div>
-                                )}
+                                <div className="flex items-center justify-between">
+                                    <p className="text-sm font-medium">{userData?.email}</p>
+                                    <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">Not editable</span>
+                                </div>
                             </div>
                         </div>
 
-                        {/* Phone Number */}
+                        {/* Phone */}
                         <div className="flex items-center space-x-3 bg-[#F9FAFB] px-4 py-3 rounded-md">
                             <Phone className="h-7 w-7 text-[#737373]" />
                             <div className="flex-1">
                                 <p className="text-xs text-[#737373]">Phone Number</p>
                                 {editingField === "phoneNumber" ? (
                                     <div className="flex space-x-2">
-                                        <Input value={tempValue} onChange={(e) => setTempValue(e.target.value)} className="flex-1 text-sm font-medium text-[#000000]" type="tel" />
+                                        <Input
+                                            value={tempValue}
+                                            onChange={(e) => setTempValue(e.target.value)}
+                                            className="flex-1 text-sm font-medium text-[#000000]"
+                                            type="tel"
+                                        />
                                         <Button size="sm" onClick={() => handleSave("phoneNumber")}>
                                             Save
                                         </Button>
@@ -217,8 +257,12 @@ export default function PersonalDetailsCard() {
                                     </div>
                                 ) : (
                                     <div className="flex items-center justify-between">
-                                        <p className="text-sm font-medium">{userData.phoneNumber}</p>
-                                        <Button variant="ghost" size="icon" onClick={() => handleEdit("phoneNumber", userData.phoneNumber)}>
+                                        <p className="text-sm font-medium">{userData?.phoneNumber}</p>
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            onClick={() => handleEdit("phoneNumber", userData?.phoneNumber)}
+                                        >
                                             <Pencil className="h-4 w-4" />
                                         </Button>
                                     </div>
@@ -232,7 +276,7 @@ export default function PersonalDetailsCard() {
                             <div className="flex-1">
                                 <p className="text-sm text-[#737373]">Password</p>
                                 <div className="flex items-center justify-between">
-                                    <p>{userData.password}</p>
+                                    <p>{userData?.password}</p>
                                     <Dialog open={isPasswordDialogOpen} onOpenChange={setIsPasswordDialogOpen}>
                                         <DialogTrigger asChild>
                                             <Button variant="secondary" size="sm">
@@ -242,15 +286,27 @@ export default function PersonalDetailsCard() {
                                         <DialogContent>
                                             <DialogHeader>
                                                 <DialogTitle>Change Password</DialogTitle>
-                                                <DialogDescription>Enter your new password below.</DialogDescription>
+                                                <DialogDescription>Enter your old and new passwords below.</DialogDescription>
                                             </DialogHeader>
                                             <div className="space-y-4 py-4">
                                                 <div className="space-y-2">
-                                                    <p className="text-sm">New Password</p>
-                                                    <Input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} />
+                                                    <p className="text-sm">Old Password</p>
+                                                    <Input
+                                                        type="password"
+                                                        value={oldPassword}
+                                                        onChange={(e) => setOldPassword(e.target.value)}
+                                                    />
                                                 </div>
                                                 <div className="space-y-2">
-                                                    <p className="text-sm">Confirm Password</p>
+                                                    <p className="text-sm">New Password</p>
+                                                    <Input
+                                                        type="password"
+                                                        value={newPassword}
+                                                        onChange={(e) => setNewPassword(e.target.value)}
+                                                    />
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <p className="text-sm">Confirm New Password</p>
                                                     <Input
                                                         type="password"
                                                         value={confirmPassword}
@@ -262,7 +318,9 @@ export default function PersonalDetailsCard() {
                                                 <Button variant="outline" onClick={() => setIsPasswordDialogOpen(false)}>
                                                     Cancel
                                                 </Button>
-                                                <Button onClick={handlePasswordChange}>Update Password</Button>
+                                                <Button onClick={handlePasswordChange} disabled={resetPasswordMutation.isPending}>
+                                                    {resetPasswordMutation.isPending ? "Updating..." : "Update Password"}
+                                                </Button>
                                             </DialogFooter>
                                         </DialogContent>
                                     </Dialog>
@@ -270,41 +328,24 @@ export default function PersonalDetailsCard() {
                             </div>
                         </div>
 
-                        {/* Action Buttons */}
+                        {/* Save button */}
                         <div className="flex justify-between pt-4">
-                            <AlertDialog>
-                                <AlertDialogTrigger asChild>
-                                    <Button variant="destructive" className="bg-red-100 hover:bg-red-200 text-red-600 hover:text-red-700">
-                                        Delete Account
-                                    </Button>
-                                </AlertDialogTrigger>
-                                <AlertDialogContent>
-                                    <AlertDialogHeader>
-                                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                                        <AlertDialogDescription>
-                                            This action cannot be undone. This will permanently delete your account and remove your data from our
-                                            servers.
-                                        </AlertDialogDescription>
-                                    </AlertDialogHeader>
-                                    <AlertDialogFooter>
-                                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                        <AlertDialogAction onClick={handleDeleteAccount} className="bg-red-600 hover:bg-red-700">
-                                            Delete
-                                        </AlertDialogAction>
-                                    </AlertDialogFooter>
-                                </AlertDialogContent>
-                            </AlertDialog>
-
-                            <Button className="bg-green-600 hover:bg-green-700" onClick={handleSaveChanges}>
-                                Save Changes
+                            <Button
+                                className="bg-green-600 hover:bg-green-700"
+                                onClick={handleSaveChanges}
+                                disabled={updateProfileMutation.isPending}
+                            >
+                                {updateProfileMutation.isPending ? "Saving..." : "Save Changes"}
                             </Button>
                         </div>
                     </CardContent>
                 </Card>
-                <div className="">
+
+                <div>
                     <FeedbackCard />
                 </div>
             </div>
+
             <div className="lg:col-span-2 mt-5 md:mt-0">
                 <SubscriptionCard />
             </div>

@@ -2,7 +2,7 @@
 
 import type React from "react"
 import { usePathname } from "next/navigation"
-import { GoDesktopDownload, GoPeople } from "react-icons/go";
+import { GoDesktopDownload } from "react-icons/go";
 import { MdOutlineAccountCircle, MdOutlineSupportAgent } from "react-icons/md";
 import { IoIosStarHalf } from "react-icons/io";
 import { RiNewspaperLine } from "react-icons/ri";
@@ -22,6 +22,17 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+import { useSession } from "next-auth/react";
+import { useQuery } from "@tanstack/react-query";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useEffect } from "react";
+import { usePortfolio } from "./portfolioContext";
 
 
 
@@ -76,16 +87,43 @@ export function PortfolioSidebar() {
       href: "/my-portfolio/refer-with-friends",
     },
     {
-      icon: <GoPeople />,
-      label: "Influencers",
-      href: "/my-portfolio/influencers",
-    },
-    {
       icon: <MdOutlineSupportAgent />,
       label: "Support",
       href: "/my-portfolio/support",
     }
   ]
+
+  const { data: session } = useSession();
+
+  const { data: portfolioData } = useQuery({
+    queryKey: ["portfolio"],
+    queryFn: async () => {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/portfolio/get`, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session?.user?.accessToken}`,
+        },
+      });
+      const data = await res.json();
+      return data;
+    },
+    enabled: !!session?.user?.accessToken,
+  });
+  // Set from localStorage or default to first portfolio
+
+
+  // inside component
+  const { selectedPortfolioId, setSelectedPortfolioId } = usePortfolio()
+
+  useEffect(() => {
+    if (portfolioData?.length > 0) {
+      const validStored = portfolioData.find((p: { _id: string }) => p._id === selectedPortfolioId)
+
+      const defaultId = validStored?._id || portfolioData[0]._id
+      setSelectedPortfolioId(defaultId)
+    }
+  }, [portfolioData, selectedPortfolioId, setSelectedPortfolioId])
+
 
   return (
     <Sidebar className="max-h-lvh z-40  shadow-[2px_0px_8px_0px_#00000029]">
@@ -106,6 +144,19 @@ export function PortfolioSidebar() {
           </SidebarGroupLabel>
           <SidebarGroupContent className="pt-4 border-t">
             <SidebarMenu className="gap-0">
+              <Select value={selectedPortfolioId} onValueChange={setSelectedPortfolioId}>
+                <SelectTrigger className="flex items-center gap-3 px-7 py-3 text-base border border-green-500 rounded-md">
+                  <SelectValue placeholder="Select Portfolio" />
+                </SelectTrigger>
+
+                <SelectContent>
+                  {portfolioData?.map((item: { _id: string; name: string }) => (
+                    <SelectItem key={item._id} value={item._id}>
+                      {item.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               {sidebarItems.map((item) => {
                 const isActive = pathname === item.href
                 return (

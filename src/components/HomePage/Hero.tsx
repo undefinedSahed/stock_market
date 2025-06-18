@@ -3,7 +3,6 @@
 import { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { useSession } from "next-auth/react";
 
 const swiperImages = [
   {
@@ -31,8 +30,6 @@ const swiperImages = [
 
 export default function HeroSwiper() {
   const [currentSlide, setCurrentSlide] = useState(0);
-  const session = useSession()
-  console.log(session)
 
   const nextSlide = useCallback(() => {
     setCurrentSlide((prev) =>

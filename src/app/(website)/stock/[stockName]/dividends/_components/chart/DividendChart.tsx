@@ -1,64 +1,82 @@
-"use client";
+"use client"
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowRight } from "lucide-react";
-import Link from "next/link";
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  ResponsiveContainer,
-} from "recharts";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import useAxios from "@/hooks/useAxios"
+import { useQuery } from "@tanstack/react-query"
+import { ArrowRight } from "lucide-react"
+import Link from "next/link"
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from "recharts"
+
+interface DividendData {
+  year: string
+  amount: string
+}
+
+interface ChartData {
+  month: string
+  dividend: number
+  isLatest: boolean
+}
 
 export default function DividendChart() {
-  // Dividend data from May 2022 to May 2024
-  const dividendData = [
-    { month: "May 2022", dividend: 0.25, isLatest: false },
-    { month: "Aug 2022", dividend: 0.25, isLatest: false },
-    { month: "Nov 2022", dividend: 0.25, isLatest: false },
-    { month: "Feb 2023", dividend: 0.25, isLatest: false },
-    { month: "May 2023", dividend: 0.26, isLatest: false },
-    { month: "Aug 2023", dividend: 0.26, isLatest: false },
-    { month: "Nov 2023", dividend: 0.26, isLatest: false },
-    { month: "Feb 2024", dividend: 0.26, isLatest: false },
-    { month: "May 2024", dividend: 0.27, isLatest: true },
-  ];
+  const axiosInstence = useAxios()
+
+  const { data: apiData, isLoading } = useQuery({
+    queryKey: ["amount-chart-data"],
+    queryFn: async () => {
+      const res = await axiosInstence(`/portfolio/dividends/AAPL`)
+      return res.data.chartforAmmount as DividendData[]
+    },
+  })
+
+  // Transform API data to chart format
+  const chartData: ChartData[] =
+    apiData?.map((item, index, array) => ({
+      month: item.year,
+      dividend: Number.parseFloat(item.amount),
+      isLatest: index === array.length - 1,
+    })) || []
+
+  // Calculate dynamic Y-axis domain
+  const maxDividend = Math.max(...chartData.map((item) => item.dividend), 0)
+  const yAxisMax = Math.ceil(maxDividend * 1.2 * 10) / 10 // Add 20% padding and round to 1 decimal
+
+  if (isLoading) {
+    return (
+      <Card>
+        <CardHeader className="p-0">
+          <CardTitle className="text-lg font-medium mb-4">Dividend Amount Per Share</CardTitle>
+        </CardHeader>
+        <CardContent className="p-4 shadow-[0px_0px_8px_0px_#00000029]">
+          <div className="h-[300px] w-full flex items-center justify-center">
+            <div className="text-gray-500">Loading chart data...</div>
+          </div>
+        </CardContent>
+        <div className="flex justify-end mt-4">
+          <Link href="/dividend-calendar" className="text-blue-500 hover:text-blue-700 text-sm flex items-center">
+            Daily Dividend Calendar <ArrowRight className="ml-1 h-3 w-3" />
+          </Link>
+        </div>
+      </Card>
+    )
+  }
 
   return (
     <Card>
       <CardHeader className="p-0">
-        <CardTitle className="text-lg font-medium mb-4">
-          Dividend Amount Per Share
-        </CardTitle>
+        <CardTitle className="text-lg font-medium mb-4">Dividend Amount Per Share</CardTitle>
       </CardHeader>
       <CardContent className="p-4 shadow-[0px_0px_8px_0px_#00000029]">
         <div className="h-[300px] w-full">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart
-              data={dividendData}
-              margin={{ top: 10, right: 10, left: 10, bottom: 20 }}
-              barGap={2}
-            >
-              <CartesianGrid
-                strokeDasharray="3 3"
-                horizontal={true}
-                vertical={false}
-              />
-              <XAxis
-                dataKey="month"
-                axisLine={false}
-                tickLine={false}
-                tick={{ fontSize: 12 }}
-                tickMargin={8}
-              />
+            <BarChart data={chartData} margin={{ top: 10, right: 10, left: 10, bottom: 20 }} barGap={2}>
+              <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} />
+              <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fontSize: 12 }} tickMargin={8} />
               <YAxis
                 axisLine={false}
                 tickLine={false}
                 tickFormatter={(value) => `$${value.toFixed(2)}`}
-                domain={[0, 0.3]}
-                ticks={[0, 0.1, 0.2, 0.3]}
+                domain={[0, yAxisMax]}
                 tick={{ fontSize: 12 }}
               />
               <Bar
@@ -84,13 +102,10 @@ export default function DividendChart() {
         </div>
       </CardContent>
       <div className="flex justify-end mt-4">
-        <Link
-          href="/dividend-calendar"
-          className="text-blue-500 hover:text-blue-700 text-sm flex items-center"
-        >
+        <Link href="/dividend-calendar" className="text-blue-500 hover:text-blue-700 text-sm flex items-center">
           Daily Dividend Calendar <ArrowRight className="ml-1 h-3 w-3" />
         </Link>
       </div>
     </Card>
-  );
+  )
 }

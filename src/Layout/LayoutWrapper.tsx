@@ -8,6 +8,7 @@ import {
   QueryClientProvider,
 } from "@tanstack/react-query";
 import Navbar from "@/components/Navbar/Navbar";
+import { PortfolioProvider } from "@/components/Portfolio/portfolioContext";
 
 const queryClient = new QueryClient();
 
@@ -31,9 +32,11 @@ export default function LayoutWrapper({
     <>
       {!isAuthRoute && !isDashboardRoute && <Navbar />}
 
-      <QueryClientProvider client={queryClient}>
-        <main>{children}</main>
-      </QueryClientProvider>
+      <PortfolioProvider>
+        <QueryClientProvider client={queryClient}>
+          <main>{children}</main>
+        </QueryClientProvider>
+      </PortfolioProvider>
 
       {!isAuthRoute && !isDashboardRoute && !shouldHideFooterSpecific && <Footer />}
     </>

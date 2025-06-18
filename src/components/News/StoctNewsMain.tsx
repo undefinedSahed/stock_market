@@ -1,9 +1,24 @@
 import Image from "next/image";
 import NewsCart from "./NewsCart";
+import { Button } from "../ui/button";
+import Link from "next/link";
 
+interface FirstNews {
+  url: string;
+  image: string;
+  category: string;
+  headline: string;
+  summary: string;
+  datetime: number;
+}
 
+interface StockNewsMainProps {
+  firstNews: FirstNews;
+}
 
-export default function StockNewsMain() {
+export default function StockNewsMain({ firstNews }: StockNewsMainProps) {
+  console.log(firstNews);
+
   return (
     <div className="w-full mb-[80px] container mx-auto">
       <h1 className="text-2xl font-bold mb-6">Stock Market News</h1>
@@ -12,36 +27,41 @@ export default function StockNewsMain() {
         {/* Main Article */}
         <div className="flex gap-10">
           <div className="w-1/2">
-            <Image
-              src="/images/news-img.png"
-              alt="Stock market chart"
-              width={400}
-              height={300}
-              className="w-full h-full object-contain rounded-lg bg-black"
-            />
+            <Link  href={`${firstNews?.url}`} target="_blank">
+              <Image
+                src={firstNews?.image}
+                alt="Stock market chart"
+                width={400}
+                height={300}
+                className="w-full h-full object-contain rounded-lg bg-black"
+              />
+            </Link>
           </div>
 
           <div className="flex-1">
-            <div className="text-sm text-gray-500 mb-10">Market News</div>
+            <div className="text-sm text-gray-500 mb-10">
+              {firstNews?.category}
+            </div>
             <h2 className="text-[40px] font-semiboldold mb-10 leading-[50px] text-[#000000]">
-              Seeking Up to 11% Dividend <br /> Yield? Analysts Suggest 2 <br />{" "}
-              Dividend Stocks to Buy
+              {firstNews?.headline}
             </h2>
-            <p className="text-gray-700 mb-4">
-              For weeks, stocks have been volatile amid escalating uncertainties
-              about the U.S. economic trajectory. With a trade war brewing{" "}
-              <br /> between the U.S. an...
-            </p>
+            <p className="text-gray-700 mb-4">{firstNews?.summary}</p>
             <hr className="my-8" />
             <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-500">3m ago</span>
-              <div className="flex gap-2">
-                <button className="rounded-full text-[#2695FF] text-xs px-3 border border-[#2695FF] py-[6px]">
-                  EFC
-                </button>
-                <button className="rounded-full text-xs text-[#2695FF] px-3 border border-[#2695FF] py-[6px]">
-                  GMRE
-                </button>
+              <span className="text-sm text-gray-500">{`${(
+                firstNews?.datetime /
+                (1000 * 60 * 60 * 24)
+              ).toFixed(1)}d ago`}</span>
+              <div>
+                <Link href={`${firstNews?.url}`} target="_blank">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="rounded-full text-xs h-7 px-3 border-[#2695FF] text-[#2695FF]"
+                  >
+                    READ
+                  </Button>
+                </Link>
               </div>
             </div>
           </div>
@@ -49,7 +69,7 @@ export default function StockNewsMain() {
 
         {/* Smaller Articles */}
         <div className="mt-10">
-            <NewsCart />
+          <NewsCart />
         </div>
       </div>
     </div>

@@ -1,204 +1,254 @@
-"use client"
+"use client";
 
-import { useEffect, useRef } from "react"
-import * as echarts from "echarts"
-import { Card } from "@/components/ui/card"
+import { useEffect, useRef, useState, useCallback } from "react";
+import * as echarts from "echarts";
+import { Card } from "@/components/ui/card";
 
 interface StockChartProps {
-    selectedStock: string
-    timeframe: string
-    comparisonStocks?: string[]
+    selectedStock: string;
+    timeframe: string;
+    comparisonStocks?: string[];
+}
+
+interface ApiResponse {
+    o: number[]; // open
+    h: number[]; // high
+    l: number[];// low
+    c: number[]; // close
+    v: number[]; // volume
+    t: number[]; // timestamp
+    s: string; // status
 }
 
 export default function StockChart({ selectedStock, timeframe, comparisonStocks = [] }: StockChartProps) {
-    const chartRef = useRef<HTMLDivElement>(null)
-    const chartInstanceRef = useRef<echarts.ECharts | null>(null)
+    const chartRef = useRef<HTMLDivElement>(null);
+    const chartInstanceRef = useRef<echarts.ECharts | null>(null);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const [chartData, setChartData] = useState<{ [key: string]: any }>({});
+    const [loading, setLoading] = useState(false);
 
-    // Color palette for comparison stocks only
-    const comparisonColors = {
-        AAPL: "#f43f5e", // Red
-        NVDA: "#10b981", // Green
-        MSFT: "#3b82f6", // Blue
-        GOOGL: "#f97316", // Orange
-        AMZN: "#8b5cf6", // Purple
-        TSLA: "#ec4899", // Pink
-        META: "#facc15", // Yellow
-    }
+    // Primary green colors for the main stock chart
+    const primaryGreen = "#1EAD00";
+    const primaryGreenWithOpacity = "rgba(30, 173, 0, 0.38)";
 
-    // Primary green color for all main stocks
-    const primaryGreen = "#1EAD00"
-    const primaryGreenWithOpacity = "rgba(30, 173, 0, 0.38)"
-
-    // Dummy data for different stocks
-    // Format: [timestamp, price]
-    const dummyData = {
-        AAPL: generateDummyTimeSeriesData(120, 320),
-        NVDA: generateDummyTimeSeriesData(110, 130),
-        MSFT: generateDummyTimeSeriesData(390, 430),
-        GOOGL: generateDummyTimeSeriesData(170, 190),
-        AMZN: generateDummyTimeSeriesData(180, 200),
-        TSLA: generateDummyTimeSeriesData(230, 260),
-        META: generateDummyTimeSeriesData(460, 490),
-    }
-
-    // Simple function to generate time series data
-    function generateDummyTimeSeriesData(minPrice: number, maxPrice: number) {
-        // Calculate date 10 years ago from today
-        const endDate = new Date()
-        const startDate = new Date()
-        startDate.setFullYear(endDate.getFullYear() - 10)
-
-        const startTimestamp = startDate.getTime()
-        const endTimestamp = endDate.getTime()
-        const oneDay = 24 * 3600 * 1000
-
-        // Calculate number of days in 10 years (approximately)
-        // const totalDays = Math.floor((endTimestamp - startTimestamp) / oneDay)
-
-        const data: [number, number][] = []
-
-        // First data point (10 years ago)
-        let price = minPrice + Math.random() * (maxPrice - minPrice) * 0.7 // Start at a lower price
-        data.push([startTimestamp, price])
-
-        // Generate data points for each day over 10 years
-        // To reduce data size, we'll use weekly data points instead of daily
-        const interval = 1 * oneDay // Daily intervals
-
-        for (let i = interval; i <= endTimestamp - startTimestamp; i += interval) {
-            const date = startTimestamp + i
-
-            // Random price change with slight upward bias (to simulate market growth over time)
-            const volatility = 0.16 // 16% volatility
-            const randomChange = (Math.random() - 0.45) * volatility * price // Slight upward bias
-            price = price + randomChange
-
-            // Add some market cycles (bull and bear markets)
-            const yearPosition = (date - startTimestamp) / (endTimestamp - startTimestamp)
-            const cycleInfluence = Math.sin(yearPosition * Math.PI * 3) * 0.1 * price
-            price += cycleInfluence / 100
-
-            // Keep price within range but allow for growth over time
-            const timeAdjustedMax = minPrice + (maxPrice - minPrice) * (1 + yearPosition)
-            price = Math.max(minPrice * 0.7, Math.min(timeAdjustedMax, price))
-
-            data.push([date, Number(price.toFixed(2))])
-        }
-
-        // Ensure we have the most recent data point
-        data.push([endTimestamp, Number(price.toFixed(2))])
-
-        return data
-    }
-
-    // Generate volume data
-    function generateVolumeData(data: [number, number][]): [number, number][] {
-        return data.map((item) => {
-            const timestamp = item[0]
-            const volume = Math.floor(Math.random() * 1000000) + 100000 // Random volume between 100k and 1.1M
-            return [timestamp, volume]
-        })
-    }
-
-    // Calculate dataZoom start and end percentages based on timeframe
-    function calculateDataZoomRange(timeframe: string, data: [number, number][]): { start: number; end: number } {
-        if (data.length === 0) return { start: 0, end: 100 }
-
-        const now = new Date().getTime()
-        let startTime: number
+    // Convert timeframe to API parameters, memoized for stability
+    const getTimeframeParams = useCallback((timeframe: string) => {
+        const now = Math.floor(Date.now() / 1000); // Current timestamp in seconds
+        let from: number;
+        let resolution: string;
 
         switch (timeframe) {
             case "1D":
-                startTime = now - 24 * 60 * 60 * 1000 // 1 day
-                break
+                from = now - 24 * 60 * 60; // 1 day ago
+                resolution = "5"; // 5 minute intervals
+                break;
             case "5D":
-                startTime = now - 5 * 24 * 60 * 60 * 1000 // 5 days
-                break
+                from = now - 5 * 24 * 60 * 60; // 5 days ago
+                resolution = "15"; // 15 minute intervals
+                break;
             case "1M":
-                startTime = now - 30 * 24 * 60 * 60 * 1000 // 1 month (approx)
-                break
+                from = now - 30 * 24 * 60 * 60; // 30 days ago
+                resolution = "60"; // 1 hour intervals
+                break;
             case "3M":
-                startTime = now - 90 * 24 * 60 * 60 * 1000 // 3 months (approx)
-                break
+                from = now - 90 * 24 * 60 * 60; // 90 days ago
+                resolution = "D"; // Daily
+                break;
             case "6M":
-                startTime = now - 180 * 24 * 60 * 60 * 1000 // 6 months (approx)
-                break
+                from = now - 180 * 24 * 60 * 60; // 180 days ago
+                resolution = "D"; // Daily
+                break;
             case "YTD":
-                const ytdStart = new Date()
-                ytdStart.setMonth(0, 1) // January 1st of current year
-                ytdStart.setHours(0, 0, 0, 0)
-                startTime = ytdStart.getTime()
-                break
+                const ytdStart = new Date();
+                ytdStart.setMonth(0, 1); // January 1st of current year
+                ytdStart.setHours(0, 0, 0, 0);
+                from = Math.floor(ytdStart.getTime() / 1000);
+                resolution = "D"; // Daily
+                break;
             case "1Y":
-                startTime = now - 365 * 24 * 60 * 60 * 1000 // 1 year (approx)
-                break
+                from = now - 365 * 24 * 60 * 60; // 1 year ago
+                resolution = "D"; // Daily
+                break;
             case "5Y":
-                startTime = now - 5 * 365 * 24 * 60 * 60 * 1000 // 5 years (approx)
-                break
+                from = now - 5 * 365 * 24 * 60 * 60; // 5 years ago
+                resolution = "W"; // Weekly
+                break;
             default:
-                startTime = now - 365 * 24 * 60 * 60 * 1000 // Default to 1 year
+                from = now - 365 * 24 * 60 * 60; // Default to 1 year
+                resolution = "D";
         }
 
-        // Find the index of the first data point after startTime
-        const startIndex = data.findIndex((item) => item[0] >= startTime)
+        return { from, to: now, resolution };
+    }, []);
 
-        if (startIndex === -1) {
-            // If no data point is after startTime, show the entire dataset
-            return { start: 0, end: 100 }
+    // Transform API data to ECharts format, memoized for stability
+    const transformApiData = useCallback((apiData: ApiResponse): {
+        priceData: [number, number][];
+        ohlcData: [number, number, number, number, number][];
+        volumeData: [number, number][];
+    } => {
+        const priceData: [number, number][] = [];
+        const ohlcData: [number, number, number, number, number][] = [];
+        const volumeData: [number, number][] = [];
+
+        for (let i = 0; i < apiData.t.length; i++) {
+            const timestamp = apiData.t[i] * 1000; // Convert to milliseconds
+            const open = apiData.o[i];
+            const high = apiData.h[i];
+            const low = apiData.l[i];
+            const close = apiData.c[i];
+            const volume = apiData.v[i];
+
+            priceData.push([timestamp, close]);
+            ohlcData.push([timestamp, open, close, low, high]);
+            volumeData.push([timestamp, volume]);
         }
 
-        // Calculate percentage
-        const start = (startIndex / data.length) * 100
+        return { priceData, ohlcData, volumeData };
+    }, []);
 
-        return { start, end: 100 }
-    }
+    // Function to normalize data for comparison, memoized for stability
+    const normalizeData = useCallback((data: [number, number][]): [number, number][] => {
+        if (data.length === 0) return [];
 
-    // Function to normalize data for comparison
-    function normalizeData(data: [number, number][]): [number, number][] {
-        if (data.length === 0) return []
+        const firstValue = data[0][1];
+        return data.map((item) => [item[0], (item[1] / firstValue) * 100]);
+    }, []);
 
-        const firstValue = data[0][1]
-        return data.map((item) => [item[0], (item[1] / firstValue) * 100])
-    }
+    // Get color for a comparison stock, with comparisonColors defined inside for stability
+    const getComparisonColor = useCallback((symbol: string): string => {
+        // Color palette for comparison stocks only
+        const comparisonColors = {
+            AAPL: "#f43f5e", // Red
+            NVDA: "#10b981", // Green
+            MSFT: "#3b82f6", // Blue
+            GOOGL: "#f97316", // Orange
+            AMZN: "#8b5cf6", // Purple
+            TSLA: "#ec4899", // Pink
+            META: "#facc15", // Yellow
+        };
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        return (comparisonColors as any)[symbol] || "#f43f5e";
+    }, []); // No dependencies needed as comparisonColors is internal to this callback
 
-    // Get color for a comparison stock
-    function getComparisonColor(symbol: string): string {
-        /* eslint-disable @typescript-eslint/no-explicit-any */
-        return (comparisonColors as any)[symbol] || "#f43f5e" // Default to red if not found
-    }
+    // Fetch data from API without fallback to dummy data, memoized for stability
+    const fetchStockData = useCallback(async (symbol: string, timeframe: string): Promise<ApiResponse | null> => {
+        try {
+            const { from, to, resolution } = getTimeframeParams(timeframe);
+            const apiUrl = `${process.env.NEXT_PUBLIC_API_URL}/portfolio/chart?symbol=${symbol}&resolution=${resolution}&from=${from}&to=${to}`;
 
+            console.log(`Fetching data for: ${symbol} from ${apiUrl}`);
+            const response = await fetch(apiUrl);
+
+            const contentType = response.headers.get("content-type");
+            if (!contentType || !contentType.includes("application/json")) {
+                console.warn(`API returned non-JSON response for ${symbol}.`);
+                return null; // Indicate failure
+            }
+
+            if (!response.ok) {
+                console.warn(`API request failed with status ${response.status} for ${symbol}.`);
+                return null; // Indicate failure
+            }
+
+            const data: ApiResponse = await response.json();
+
+            if (data.s !== "ok") {
+                console.warn(`API returned error status: ${data.s} for ${symbol}.`);
+                return null; // Indicate failure
+            }
+
+            console.log(`Successfully fetched real data for ${symbol}.`);
+            return data;
+        } catch (error) {
+            console.error(`Error fetching data for ${symbol}:`, error);
+            return null; // Indicate failure
+        }
+    }, [getTimeframeParams]); // getTimeframeParams is a dependency
+
+    // Load data for all stocks whenever selectedStock, timeframe, or comparisonStocks change
     useEffect(() => {
-        // Initialize chart if it doesn't exist
-        if (chartRef.current && !chartInstanceRef.current) {
-            chartInstanceRef.current = echarts.init(chartRef.current)
+        async function loadData() {
+            setLoading(true);
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const newChartData: { [key: string]: any } = {};
 
-            // Handle resize
+            // Load main stock data
+            const mainData = await fetchStockData(selectedStock, timeframe);
+            if (mainData) {
+                newChartData[selectedStock] = transformApiData(mainData);
+            } else {
+                // If main stock data fails, explicitly set it to undefined to trigger "Data not available"
+                newChartData[selectedStock] = undefined;
+            }
+
+            // Load comparison stocks data
+            for (const stock of comparisonStocks) {
+                const compData = await fetchStockData(stock, timeframe);
+                if (compData) {
+                    newChartData[stock] = transformApiData(compData);
+                }
+                // If compData is null, it's simply not added to newChartData, and the chart will omit it.
+            }
+
+            setChartData(newChartData);
+            setLoading(false);
+        }
+
+        loadData();
+    }, [selectedStock, timeframe, comparisonStocks, fetchStockData, transformApiData]);
+
+    // Initialize ECharts instance on first render
+    useEffect(() => {
+        if (chartRef.current && !chartInstanceRef.current) {
+            chartInstanceRef.current = echarts.init(chartRef.current);
+
+            // Handle resize to make the chart responsive
             const handleResize = () => {
                 if (chartInstanceRef.current) {
-                    chartInstanceRef.current.resize()
+                    chartInstanceRef.current.resize();
                 }
-            }
+            };
 
-            window.addEventListener("resize", handleResize)
+            window.addEventListener("resize", handleResize);
 
             return () => {
-                window.removeEventListener("resize", handleResize)
+                window.removeEventListener("resize", handleResize);
                 if (chartInstanceRef.current) {
-                    chartInstanceRef.current.dispose()
-                    chartInstanceRef.current = null
+                    chartInstanceRef.current.dispose();
+                    chartInstanceRef.current = null;
                 }
-            }
+            };
         }
-    }, [])
+    }, []);
 
+    // Update ECharts options whenever chartData, selectedStock, or other relevant props change
     useEffect(() => {
-        if (!chartInstanceRef.current) return
+        if (!chartInstanceRef.current || loading) return;
 
-        // Get data for the selected stock (or default to AAPL)
-        const data = dummyData[selectedStock as keyof typeof dummyData] || dummyData.AAPL
+        const mainStockData = chartData[selectedStock];
 
-        // Calculate dataZoom range based on timeframe
-        const { start, end } = calculateDataZoomRange(timeframe, data)
+        // Display "Data not available" message if main stock data is missing
+        if (!mainStockData) {
+            chartInstanceRef.current.setOption({
+                title: {
+                    text: "Data not available",
+                    left: "center",
+                    top: "center",
+                    textStyle: {
+                        color: "#999",
+                        fontSize: 20,
+                    },
+                },
+                xAxis: { show: false },
+                yAxis: { show: false },
+                grid: { show: false },
+                series: [] // Clear any previous series
+            }, true);
+            return;
+        }
+
+        const { priceData, volumeData } = mainStockData;
 
         // Prepare series for the chart
         const series = [
@@ -209,31 +259,31 @@ export default function StockChart({ selectedStock, timeframe, comparisonStocks 
                 symbol: "none",
                 sampling: "average",
                 itemStyle: {
-                    color: primaryGreen, // Always use green for the primary stock
+                    color: primaryGreen,
                 },
                 areaStyle: {
                     color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
                         {
                             offset: 0,
-                            color: primaryGreenWithOpacity, // Green with opacity
+                            color: primaryGreenWithOpacity,
                         },
                         {
                             offset: 0.9893,
-                            color: "#FFFFFF", // End color close to 98.93%
+                            color: "#FFFFFF",
                         },
                     ]),
                 },
-                data: comparisonStocks.length > 0 ? normalizeData(data) : data,
+                data: comparisonStocks.length > 0 ? normalizeData(priceData) : priceData,
             },
-        ]
+        ];
 
-        // Add comparison stocks if any
+        // Add comparison stocks if any are present and have data
         if (comparisonStocks.length > 0) {
             comparisonStocks.forEach((stockSymbol) => {
-                if (dummyData[stockSymbol as keyof typeof dummyData]) {
-                    const comparisonData = dummyData[stockSymbol as keyof typeof dummyData]
-                    const normalizedData = normalizeData(comparisonData)
-                    const stockColor = getComparisonColor(stockSymbol)
+                if (chartData[stockSymbol]) {
+                    const comparisonData = chartData[stockSymbol].priceData;
+                    const normalizedData = normalizeData(comparisonData);
+                    const stockColor = getComparisonColor(stockSymbol);
 
                     series.push({
                         name: stockSymbol,
@@ -242,82 +292,78 @@ export default function StockChart({ selectedStock, timeframe, comparisonStocks 
                         symbol: "none",
                         sampling: "average",
                         itemStyle: {
-                            color: stockColor, // Use different colors for comparison stocks
+                            color: stockColor,
                         },
                         data: normalizedData,
-                        // @ts-expect-error style is not a valid option
-                        areaStyle: undefined
-                    })
+                        // @ts-expect-error areaStyle is not needed for comparison
+                        areaStyle: undefined,
+                    });
                 }
-            })
+            });
         }
 
-        // Add volume series
+        // Add volume series to the chart
         series.push({
             name: "Volume",
             type: "bar",
             xAxisIndex: 0,
             yAxisIndex: 1,
-            z: -1, // Put volume behind price lines
+            z: -1,
             itemStyle: {
-                // @ts-expect-error color is not a valid option
+                // @ts-expect-error color function
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 color: (params: any) => {
-                    // Get the corresponding price data point
-                    const priceIndex = params.dataIndex
-                    if (priceIndex > 0 && data[priceIndex] && data[priceIndex - 1]) {
-                        // Red if price went down, green if price went up
-                        return data[priceIndex][1] >= data[priceIndex - 1][1] ? "#10b981" : "#f43f5e"
+                    const priceIndex = params.dataIndex;
+                    if (priceIndex > 0 && priceData[priceIndex] && priceData[priceIndex - 1]) {
+                        return priceData[priceIndex][1] >= priceData[priceIndex - 1][1] ? "#10b981" : "#f43f5e";
                     }
-                    return "#10b981" // Default to green
+                    return "#10b981";
                 },
-                opacity: 0.3, // Make volume bars semi-transparent
+                opacity: 0.3,
             },
-            data: generateVolumeData(data),
-        })
+            data: volumeData,
+        });
 
-        // Configure chart options
+        // Configure ECharts options
         const option = {
             animation: true,
             tooltip: {
                 trigger: "axis",
-                /* eslint-disable @typescript-eslint/no-explicit-any */
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 position: (pt: any) => [pt[0], "10%"],
-                /* eslint-disable @typescript-eslint/no-explicit-any */
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 formatter: (params: any) => {
-                    const date = new Date(params[0].value[0])
-                    let tooltipText = `<div style="font-weight: bold">${date.toLocaleDateString()}</div>`
-
-                    // Filter out volume from tooltip
-                    const priceParams = params.filter((param: any) => param.seriesName !== "Volume")
-                    /* eslint-disable @typescript-eslint/no-explicit-any */
+                    const date = new Date(params[0].value[0]);
+                    let tooltipText = `<div style="font-weight: bold">${date.toLocaleDateString()}</div>`;
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    const priceParams = params.filter((param: any) => param.seriesName !== "Volume");
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     priceParams.forEach((param: any) => {
-                        const color = param.color
-                        const seriesName = param.seriesName
-                        const value = param.value[1]
+                        const color = param.color;
+                        const seriesName = param.seriesName;
+                        const value = param.value[1];
 
-                        // If comparing stocks, show percentage change
                         if (comparisonStocks.length > 0) {
                             tooltipText += `<div style="display: flex; align-items: center;">
                                 <span style="display: inline-block; width: 10px; height: 10px; background: ${color}; margin-right: 5px;"></span>
                                 <span>${seriesName}: ${value.toFixed(2)}%</span>
-                            </div>`
+                            </div>`;
                         } else {
                             tooltipText += `<div style="display: flex; align-items: center;">
                                 <span style="display: inline-block; width: 10px; height: 10px; background: ${color}; margin-right: 5px;"></span>
                                 <span>${seriesName}: $${value.toFixed(2)}</span>
-                            </div>`
+                            </div>`;
                         }
-                    })
-                    // Add volume information
-                    /* eslint-disable @typescript-eslint/no-explicit-any */
-                    const volumeParam = params.find((param: any) => param.seriesName === "Volume")
+                    });
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    const volumeParam = params.find((param: any) => param.seriesName === "Volume");
                     if (volumeParam) {
                         tooltipText += `<div style="display: flex; align-items: center; margin-top: 5px;">
                               <span>Volume: ${volumeParam.value[1].toLocaleString()}</span>
-                          </div>`
+                          </div>`;
                     }
 
-                    return tooltipText
+                    return tooltipText;
                 },
             },
             title: {
@@ -371,11 +417,10 @@ export default function StockChart({ selectedStock, timeframe, comparisonStocks 
                     boundaryGap: [0, "100%"],
                     axisLabel: {
                         formatter: (value: number) => {
-                            // If comparing stocks, show percentage
                             if (comparisonStocks.length > 0) {
-                                return `${value.toFixed(0)}%`
+                                return `${value.toFixed(0)}%`;
                             }
-                            return `$${value.toFixed(0)}`
+                            return `$${value.toFixed(0)}`;
                         },
                     },
                     splitLine: { show: true },
@@ -401,15 +446,15 @@ export default function StockChart({ selectedStock, timeframe, comparisonStocks 
             dataZoom: [
                 {
                     type: "inside",
-                    start: start,
-                    end: end,
+                    start: 0,
+                    end: 100,
                     xAxisIndex: [0],
                     zoomLock: false,
                 },
                 {
                     type: "slider",
-                    start: start,
-                    end: end,
+                    start: 0,
+                    end: 100,
                     height: 20,
                     bottom: 30,
                     borderColor: "transparent",
@@ -430,16 +475,27 @@ export default function StockChart({ selectedStock, timeframe, comparisonStocks 
                 },
             ],
             series: series,
-        }
-
-        // Apply options to chart
-        chartInstanceRef.current.setOption(option, true)
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [selectedStock, timeframe, comparisonStocks])
+        };
+        chartInstanceRef.current.setOption(option, true);
+    }, [chartData, selectedStock, timeframe, comparisonStocks, loading, getComparisonColor, normalizeData, primaryGreen, primaryGreenWithOpacity]);
 
     return (
         <Card className="relative overflow-hidden max-w-[98vw]">
+            {loading && (
+                <div className="absolute inset-0 bg-white/80 flex items-center justify-center z-10">
+                    <div className="text-sm text-muted-foreground">Loading chart data...</div>
+                </div>
+            )}
+            {/* Display "Data not available" if not loading and main stock data is missing */}
+            {!loading && !chartData[selectedStock] && (
+                <div className="absolute inset-0 bg-white/80 flex items-center justify-center z-10">
+                    <div className="text-sm text-muted-foreground text-center">
+                        <p>Data not available for **{selectedStock}**.</p>
+                        <p>Please try again later or select a different stock.</p>
+                    </div>
+                </div>
+            )}
             <div ref={chartRef} className="h-[500px] w-full" />
         </Card>
-    )
+    );
 }

@@ -1,28 +1,55 @@
 import StockAds from "@/shared/StockAds";
 import MarketNewsCard from "./MarketNewsCard";
 import { ChevronRight } from "lucide-react";
+import Link from "next/link";
 
-export default function StockNews() {
+interface NewsItem {
+  _id: string;
+  image: string;
+  category: string;
+  headline: string;
+  datetime: number;
+  url: string;
+}
+
+interface StockNewsProps {
+  stockNews: NewsItem[];
+}
+
+export default function StockNews({ stockNews }: StockNewsProps) {
+  const firstNews = stockNews[10];
+
+  const fifthNews = stockNews[75];
+
   return (
     <div>
       <div className="grid grid-cols-1 lg:grid-cols-6 gap-8">
         <div className="lg:col-span-4">
-          <MarketNewsCard
-            image="/images/news-cart.png"
-            title="Broadcom (AVGO) is About to Report Q1..."
-            timeAgo="15d ago"
-            tags={[{ name: "AAPL" }, { name: "AVGO" }]}
-          />
+          <Link href={`${firstNews?.url}`}>
+            <MarketNewsCard
+              image={firstNews?.image}
+              category={firstNews?.category}
+              title={firstNews?.headline}
+              timeAgo={`${(firstNews?.datetime / (1000 * 60 * 60 * 24)).toFixed(
+                1
+              )}d ago`}
+              tags={[{ name: "AAPL" }, { name: "AVGO" }]}
+            />
+          </Link>
         </div>
 
         <div className="lg:col-span-2">
-          <MarketNewsCard
-            image="/images/news-cart.png"
-            title="Broadcom (AVGO) is About to Report Q1..."
-            timeAgo="15d ago"
-            tags={[{ name: "AAPL" }, { name: "AVGO" }]}
-            showBannerAd={true}
-          />
+          <Link href={`${firstNews?.url}`}>
+            <MarketNewsCard
+              image={fifthNews?.image}
+              category={fifthNews?.category}
+              title={fifthNews?.headline}
+              timeAgo={`${(fifthNews?.datetime / (1000 * 60 * 60 * 24)).toFixed(
+                1
+              )}d ago`}
+              tags={[{ name: "AAPL" }, { name: "AVGO" }]}
+            />
+          </Link>
 
           <div className="mt-5">
             <StockAds />
@@ -31,26 +58,18 @@ export default function StockNews() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-8">
-        <MarketNewsCard
-          image="/images/news-cart.png"
-          title="Broadcom (AVGO) is About to Report Q1..."
-          timeAgo="15d ago"
-          tags={[{ name: "AAPL" }, { name: "AVGO" }]}
-        />
-
-        <MarketNewsCard
-          image="/images/news-cart.png"
-          title="Broadcom (AVGO) is About to Report Q1..."
-          timeAgo="15d ago"
-          tags={[{ name: "AAPL" }, { name: "AVGO" }]}
-        />
-
-        <MarketNewsCard
-          image="/images/news-cart.png"
-          title="Broadcom (AVGO) is About to Report Q1..."
-          timeAgo="15d ago"
-          tags={[{ name: "AAPL" }, { name: "AVGO" }]}
-        />
+        {stockNews.slice(0, 3).map((news) => (
+          <MarketNewsCard
+            key={news?._id}
+            image={news?.image}
+            category={news?.category}
+            title={news?.headline}
+            timeAgo={`${(news?.datetime / (1000 * 60 * 60 * 24)).toFixed(
+              1
+            )}d ago`}
+            tags={[{ name: "AAPL" }, { name: "AVGO" }]}
+          />
+        ))}
       </div>
 
       <div className="font-medium text-blue-500 text-xl mt-2 flex justify-end">

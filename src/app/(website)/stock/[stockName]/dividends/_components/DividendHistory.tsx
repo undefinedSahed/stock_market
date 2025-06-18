@@ -5,119 +5,105 @@ import { Plus, Minus } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import useAxios from "@/hooks/useAxios"
+import { useQuery } from "@tanstack/react-query"
+
+interface DividendData {
+  adjustedAmount: number
+  amount: number
+  currency: string
+  date: string // Ex-date
+  declarationDate: string
+  franking: number
+  freq: string
+  payDate: string
+  recordDate: string
+  symbol: string
+}
 
 export default function DividendHistory() {
   const [showAll, setShowAll] = useState(false)
-
-  // Initial visible rows
   const initialRows = 7
 
-  // Full dividend history data
-  const dividendData = [
-    {
-      exDate: "Feb 10, 2025",
-      recordDate: "Feb 10, 2025",
-      paymentDate: "Feb 13, 2025",
-      frequency: "Quarterly",
-      declarationDate: "Oct 31, 2024",
-      amount: "$0.25",
-    },
-    {
-      exDate: "Feb 10, 2025",
-      recordDate: "Feb 10, 2025",
-      paymentDate: "Feb 13, 2025",
-      frequency: "Quarterly",
-      declarationDate: "Oct 31, 2024",
-      amount: "$0.25",
-    },
-    {
-      exDate: "Feb 10, 2025",
-      recordDate: "Feb 10, 2025",
-      paymentDate: "Feb 13, 2025",
-      frequency: "Quarterly",
-      declarationDate: "Oct 31, 2024",
-      amount: "$0.25",
-    },
-    {
-      exDate: "Feb 10, 2025",
-      recordDate: "Feb 10, 2025",
-      paymentDate: "Feb 13, 2025",
-      frequency: "Quarterly",
-      declarationDate: "Oct 31, 2024",
-      amount: "$0.25",
-    },
-    {
-      exDate: "Feb 10, 2025",
-      recordDate: "Feb 10, 2025",
-      paymentDate: "Feb 13, 2025",
-      frequency: "Quarterly",
-      declarationDate: "Oct 31, 2024",
-      amount: "$0.25",
-    },
-    {
-      exDate: "Feb 10, 2025",
-      recordDate: "Feb 10, 2025",
-      paymentDate: "Feb 13, 2025",
-      frequency: "Quarterly",
-      declarationDate: "Oct 31, 2024",
-      amount: "$0.25",
-    },
-    {
-      exDate: "Feb 10, 2025",
-      recordDate: "Feb 10, 2025",
-      paymentDate: "Feb 13, 2025",
-      frequency: "Quarterly",
-      declarationDate: "Oct 31, 2024",
-      amount: "$0.25",
-    },
-    // Additional rows that will be shown when "Show More" is clicked
-    {
-      exDate: "Feb 10, 2025",
-      recordDate: "Feb 10, 2025",
-      paymentDate: "Feb 13, 2025",
-      frequency: "Quarterly",
-      declarationDate: "Oct 31, 2024",
-      amount: "$0.25",
-    },
-    {
-      exDate: "Feb 10, 2025",
-      recordDate: "Feb 10, 2025",
-      paymentDate: "Feb 13, 2025",
-      frequency: "Quarterly",
-      declarationDate: "Oct 31, 2024",
-      amount: "$0.25",
-    },
-    {
-      exDate: "Feb 10, 2025",
-      recordDate: "Feb 10, 2025",
-      paymentDate: "Feb 13, 2025",
-      frequency: "Quarterly",
-      declarationDate: "Oct 31, 2024",
-      amount: "$0.25",
-    },
-    {
-      exDate: "Feb 10, 2025",
-      recordDate: "Feb 10, 2025",
-      paymentDate: "Feb 13, 2025",
-      frequency: "Quarterly",
-      declarationDate: "Oct 31, 2024",
-      amount: "$0.25",
-    },
-    {
-      exDate: "Feb 10, 2025",
-      recordDate: "Feb 10, 2025",
-      paymentDate: "Feb 13, 2025",
-      frequency: "Quarterly",
-      declarationDate: "Oct 31, 2024",
-      amount: "$0.25",
-    },
-  ]
+  const axiosInstance = useAxios()
 
-  // Display either initial rows or all rows based on state
-  const displayedRows = showAll ? dividendData : dividendData.slice(0, initialRows)
+  const {
+    data: history,
+    isLoading,
+    error,
+  } = useQuery({
+    queryKey: ["history-chart"],
+    queryFn: async () => {
+      const res = await axiosInstance(`/portfolio/dividends/AAPL`)
+      return res.data.rawDividends as DividendData[]
+    },
+  })
+
+  // Helper function to format date
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString)
+    return date.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    })
+  }
+
+  // Helper function to get frequency text
+  const getFrequencyText = (freq: string) => {
+    switch (freq) {
+      case "1":
+        return "Annual"
+      case "2":
+        return "Semi-Annual"
+      case "4":
+        return "Quarterly"
+      case "12":
+        return "Monthly"
+      default:
+        return "Quarterly"
+    }
+  }
+
+  // Helper function to format currency
+  const formatCurrency = (amount: number, currency = "USD") => {
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: currency,
+    }).format(amount)
+  }
+
+  // Sort data by date (most recent first) and slice for display
+  const sortedData = history ? [...history].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()) : []
+
+  const displayedRows = showAll ? sortedData : sortedData.slice(0, initialRows)
 
   const toggleShowAll = () => {
     setShowAll(!showAll)
+  }
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <div className="text-lg">Loading dividend history...</div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <div className="text-lg text-red-600">Error loading dividend history. Please try again.</div>
+      </div>
+    )
+  }
+
+  if (!history || history.length === 0) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <div className="text-lg text-gray-600">No dividend history available.</div>
+      </div>
+    )
   }
 
   return (
@@ -138,43 +124,39 @@ export default function DividendHistory() {
           </TableHeader>
           <TableBody>
             {displayedRows.map((row, index) => (
-              <TableRow key={index}>
-                <TableCell className="text-center">{row.exDate}</TableCell>
-                <TableCell className="text-center">{row.recordDate}</TableCell>
-                <TableCell className="text-center">{row.paymentDate}</TableCell>
-                <TableCell className="text-center">{row.frequency}</TableCell>
-                <TableCell className="text-center">{row.declarationDate}</TableCell>
-                <TableCell className="text-center">{row.amount}</TableCell>
+              <TableRow key={`${row.date}-${index}`}>
+                <TableCell className="text-center">{formatDate(row.date)}</TableCell>
+                <TableCell className="text-center">{formatDate(row.recordDate)}</TableCell>
+                <TableCell className="text-center">{formatDate(row.payDate)}</TableCell>
+                <TableCell className="text-center">{getFrequencyText(row.freq)}</TableCell>
+                <TableCell className="text-center">{formatDate(row.declarationDate)}</TableCell>
+                <TableCell className="text-center">{formatCurrency(row.amount, row.currency)}</TableCell>
               </TableRow>
             ))}
           </TableBody>
         </Table>
       </div>
 
-      {/* Description */}
-      <div className="bg-[#e6e6e6] py-4 px-4 text-sm text-gray-600">
-        The table shows Apple s dividend history, including amount per share, payout frequency, declaration, record, and
-        payment dates.
-      </div>
-
-      {/* Show More/Less button */}
-      <Button
-        onClick={toggleShowAll}
-        variant="ghost"
-        className="flex items-center justify-center w-full py-4 bg-gradient-to-t from-gray-400 via-white to-white text-green-500 font-medium transition-colors hover:text-green-600"
-      >
-        {showAll ? (
-          <>
-            <Minus className="w-4 h-4 mr-2" />
-            Show Less
-          </>
-        ) : (
-          <>
-            <Plus className="w-4 h-4 mr-2" />
-            Show More
-          </>
-        )}
-      </Button>
+      {/* Show More/Less button - only show if there are more rows than initial display */}
+      {sortedData.length > initialRows && (
+        <Button
+          onClick={toggleShowAll}
+          variant="ghost"
+          className="flex items-center justify-center w-full py-4 bg-gradient-to-t from-gray-400 via-white to-white text-green-500 font-medium transition-colors hover:text-green-600"
+        >
+          {showAll ? (
+            <>
+              <Minus className="w-4 h-4 mr-2" />
+              Show Less
+            </>
+          ) : (
+            <>
+              <Plus className="w-4 h-4 mr-2" />
+              Show More ({sortedData.length - initialRows} more)
+            </>
+          )}
+        </Button>
+      )}
     </div>
   )
 }

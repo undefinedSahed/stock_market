@@ -1,3 +1,5 @@
+"use client"
+
 import RecentNews from "@/components/overview/news";
 import { Button } from "@/components/ui/button";
 import { Check, ChevronUp } from "lucide-react";
@@ -6,8 +8,22 @@ import NewsAndScore from "./_components/NewsAndScore";
 import MediaCoverageChart from "./_components/chart/MediaCoverageChart";
 import StockPremiumBanner from "@/components/Portfolio/chart/chart-bottom";
 import OverviewFAQ from "@/components/overview/overview-faq";
+import useAxios from "@/hooks/useAxios";
+import { useQuery } from "@tanstack/react-query";
 
-const page = () => {
+const Page = () => {
+
+  const axiosInstance = useAxios();
+
+  const {data : allNews = []} = useQuery({
+    queryKey : ["overview-news"],
+    queryFn : async () => {
+      const res = await axiosInstance('/admin/news/market-news');
+      return res.data.data;
+    }
+  })  
+
+
   return (
     <div className="lg:w-[75vw]">
       <div className="mt-8">
@@ -50,7 +66,7 @@ const page = () => {
         <div className="lg:w-[75%]">
 
           <div>
-            <StockNews />
+            <StockNews stockNews={allNews} />
           </div>
 
           <div>
@@ -79,4 +95,4 @@ const page = () => {
   );
 };
 
-export default page;
+export default Page;

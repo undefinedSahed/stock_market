@@ -3,6 +3,7 @@ import Image from "next/image";
 interface MarketNewsCardProps {
   image: string;
   title: string;
+  category?: string;
   timeAgo: string;
   tags: Array<{
     name: string;
@@ -12,6 +13,7 @@ interface MarketNewsCardProps {
 }
 
 export default function MarketNewsCard({
+  category,
   image,
   title,
   timeAgo,
@@ -21,7 +23,7 @@ export default function MarketNewsCard({
     <div className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
       <div className="relative">
         <Image
-          src={image || "/images/news-cart.png"}
+          src={image}
           alt={title}
           width={500}
           height={300}
@@ -29,7 +31,7 @@ export default function MarketNewsCard({
         />
       </div>
       <div className="p-4">
-        <div className="text-sm font-medium text-gray-500">Market News</div>
+        <div className="text-sm font-medium text-gray-500">{category}</div>
         <h3 className="mt-1 text-lg font-semibold text-gray-900">{title}</h3>
         <div className="mt-3 flex items-center justify-between">
           <span className="text-sm text-gray-500">{timeAgo}</span>

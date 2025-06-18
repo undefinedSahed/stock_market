@@ -41,7 +41,7 @@ interface NavItem {
 // Navigation links with icons
 const navigationLinks: NavItem[] = [
   { name: "Home", href: "/", icon: Home, isActive: true },
-  { name: "Olive Stock's Portfolio", href: "/murakkabs-portfolio", icon: TrendingUp },
+  { name: "Olive Stock's Portfolio", href: "/olivestocks-portfolio", icon: TrendingUp },
   { name: "Quality Stocks", href: "/quality-stocks", icon: Star },
   { name: "Stock of the Month", href: "/stock-of-month", icon: Calendar },
   { name: "My Portfolio", href: "/my-portfolio", icon: Briefcase },

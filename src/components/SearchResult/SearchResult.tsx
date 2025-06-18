@@ -18,7 +18,6 @@ const SearchResult = () => {
   const [isActive, setIsActive] = useState("price");
   const [isActive2, setIsActive2] = useState("revenue");
   const searchParams = useSearchParams();
-  // console.log(searchParams.q)
   const query = searchParams.get("q");
 
   const axiosInstance = useAxios();
@@ -32,8 +31,6 @@ const SearchResult = () => {
       return res.data;
     },
   });
-
-  console.log(stockData);
 
   // Calculate percentage difference
   const percentDiff =
