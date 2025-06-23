@@ -1,5 +1,4 @@
 import Image from "next/image";
-import NewsCart from "./NewsCart";
 import { Button } from "../ui/button";
 import Link from "next/link";
 
@@ -17,8 +16,6 @@ interface StockNewsMainProps {
 }
 
 export default function StockNewsMain({ firstNews }: StockNewsMainProps) {
-  console.log(firstNews);
-
   return (
     <div className="w-full mb-[80px] container mx-auto">
       <h1 className="text-2xl font-bold mb-6">Stock Market News</h1>
@@ -27,14 +24,16 @@ export default function StockNewsMain({ firstNews }: StockNewsMainProps) {
         {/* Main Article */}
         <div className="flex gap-10">
           <div className="w-1/2">
-            <Link  href={`${firstNews?.url}`} target="_blank">
-              <Image
-                src={firstNews?.image}
-                alt="Stock market chart"
-                width={400}
-                height={300}
-                className="w-full h-full object-contain rounded-lg bg-black"
-              />
+            <Link href={`${firstNews?.url}`} target="_blank">
+              {firstNews?.image && (
+                <Image
+                  src={firstNews?.image}
+                  alt="Stock market chart"
+                  width={400}
+                  height={300}
+                  className="w-full h-full object-contain rounded-lg bg-black"
+                />
+              )}
             </Link>
           </div>
 
@@ -65,11 +64,6 @@ export default function StockNewsMain({ firstNews }: StockNewsMainProps) {
               </div>
             </div>
           </div>
-        </div>
-
-        {/* Smaller Articles */}
-        <div className="mt-10">
-          <NewsCart />
         </div>
       </div>
     </div>

@@ -82,7 +82,6 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({
       };
     }
   }, [token, socket, listenerSet, userID]);
-  console.log(notifications);
 
   return (
     <SocketContext.Provider

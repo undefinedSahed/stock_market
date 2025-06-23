@@ -125,6 +125,8 @@ export function PortfolioSidebar() {
   }, [portfolioData, selectedPortfolioId, setSelectedPortfolioId])
 
 
+  console.log(portfolioData)
+
   return (
     <Sidebar className="max-h-lvh z-40  shadow-[2px_0px_8px_0px_#00000029]">
       <SidebarContent>
@@ -150,11 +152,12 @@ export function PortfolioSidebar() {
                 </SelectTrigger>
 
                 <SelectContent>
-                  {portfolioData?.map((item: { _id: string; name: string }) => (
-                    <SelectItem key={item._id} value={item._id}>
-                      {item.name}
-                    </SelectItem>
-                  ))}
+                  {portfolioData?.length > 0 ? (
+                    portfolioData?.map((portfolio: { _id: string, name: string }) => (
+                      <SelectItem key={portfolio._id} value={portfolio._id} className="text-base">
+                        {portfolio.name}
+                      </SelectItem>
+                    )) ): "No portfolio available"} 
                 </SelectContent>
               </Select>
               {sidebarItems.map((item) => {

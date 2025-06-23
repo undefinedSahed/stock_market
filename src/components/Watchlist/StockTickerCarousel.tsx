@@ -12,7 +12,7 @@ import Image from "next/image";
 export default function StockTickerCarousel() {
   const { notifications } = useSocketContext();
   return (
-    <div className="mx-auto max-w-[1500px] w-full lg:mt-20 mt-8">
+    <div className="mx-auto container w-full lg:mt-20 mt-8">
       <Carousel opts={{ align: "start" }} className="w-full">
         <CarouselContent>
           {notifications.map((stock, index) => (
@@ -33,7 +33,13 @@ export default function StockTickerCarousel() {
                       </div>
                     </div>
                     <div>
-                      <span className="text-black text-[12px]">
+                      <span
+                        className={`text-xs font-medium text-green-500 ${
+                          parseFloat(stock.change) >= 0
+                            ? "text-green-600"
+                            : "text-red-600"
+                        }`}
+                      >
                         {/* {stock.trend === "up" ? "+" : "-"} */}
                         {parseFloat(stock.change)?.toFixed(2)} (
                         {parseFloat(stock.percent)?.toFixed(2)}%)

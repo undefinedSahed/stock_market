@@ -1,10 +1,10 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { useForm } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
-import * as z from "zod"
-import { Eye, EyeOff, Loader2 } from "lucide-react"
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import { Eye, EyeOff, Loader2 } from "lucide-react";
 
 const formSchema = z
   .object({
@@ -18,21 +18,26 @@ const formSchema = z
   .refine((data) => data.newPassword === data.confirmPassword, {
     message: "Passwords don't match",
     path: ["confirmPassword"],
-  })
+  });
 
-type FormValues = z.infer<typeof formSchema>
-
+type FormValues = z.infer<typeof formSchema>;
 interface ResetPasswordStepProps {
-  userId: string
-  onBack: () => void
-  onComplete: () => void
+  email: string; // Add email
+  otp: string; // Add otp
+  onBack: () => void;
+  onComplete: () => void;
 }
 
-export default function ResetPasswordStep({ userId, onBack, onComplete }: ResetPasswordStepProps) {
-  const [showNewPassword, setShowNewPassword] = useState(false)
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState("")
+export default function ResetPasswordStep({
+  email,
+  otp,
+  onBack,
+  onComplete,
+}: ResetPasswordStepProps) {
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const {
     register,
@@ -44,39 +49,41 @@ export default function ResetPasswordStep({ userId, onBack, onComplete }: ResetP
       newPassword: "",
       confirmPassword: "",
     },
-  })
+  });
 
   const onSubmit = async (data: FormValues) => {
-    setIsLoading(true)
-    setError("")
+    setIsLoading(true);
+    setError("");
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/change-password`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          userId: userId,
-          oldPassword: "", // Empty for forgot password flow
-          newPassword: data.newPassword,
-        }),
-      })
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/auth/reset-password`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            email: email, // Use the email passed via props
+            otp: otp, // Use the otp passed via props
+            password: data.newPassword, // Use the new password from the form
+          }),
+        }
+      );
 
-      const result = await response.json()
+      const result = await response.json();
 
       if (!response.ok) {
-        throw new Error(result.message || "Failed to reset password")
+        throw new Error(result.message || "Failed to reset password");
       }
 
-      // Show success message and redirect
-      onComplete()
+      onComplete();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred")
+      setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   return (
     <div className="flex min-h-screen items-center justify-center p-4 bg-[#eaf6ec]">
@@ -84,9 +91,13 @@ export default function ResetPasswordStep({ userId, onBack, onComplete }: ResetP
         <div className="flex flex-col items-center justify-center h-full w-[40%] mx-auto">
           <p className="mb-2 text-center text-gray-500">Step 3 of 3</p>
 
-          <h1 className="mb-4 text-center text-3xl font-bold">Reset Password</h1>
+          <h1 className="mb-4 text-center text-3xl font-bold">
+            Reset Password
+          </h1>
 
-          <p className="mb-8 text-center text-gray-600">Please kindly set your new password</p>
+          <p className="mb-8 text-center text-gray-600">
+            Please kindly set your new password
+          </p>
 
           {error && (
             <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md w-full">
@@ -110,7 +121,11 @@ export default function ResetPasswordStep({ userId, onBack, onComplete }: ResetP
               >
                 {showNewPassword ? <EyeOff size={20} /> : <Eye size={20} />}
               </button>
-              {errors.newPassword && <p className="mt-1 text-xs text-red-500">{errors.newPassword.message}</p>}
+              {errors.newPassword && (
+                <p className="mt-1 text-xs text-red-500">
+                  {errors.newPassword.message}
+                </p>
+              )}
             </div>
 
             <div className="relative">
@@ -128,7 +143,11 @@ export default function ResetPasswordStep({ userId, onBack, onComplete }: ResetP
               >
                 {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
               </button>
-              {errors.confirmPassword && <p className="mt-1 text-xs text-red-500">{errors.confirmPassword.message}</p>}
+              {errors.confirmPassword && (
+                <p className="mt-1 text-xs text-red-500">
+                  {errors.confirmPassword.message}
+                </p>
+              )}
             </div>
 
             <div className="flex gap-4 pt-4">
@@ -159,5 +178,5 @@ export default function ResetPasswordStep({ userId, onBack, onComplete }: ResetP
         </div>
       </div>
     </div>
-  )
+  );
 }

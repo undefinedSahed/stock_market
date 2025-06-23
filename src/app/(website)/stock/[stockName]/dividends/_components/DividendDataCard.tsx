@@ -1,22 +1,27 @@
-"use client"
+"use client";
 import useAxios from "@/hooks/useAxios";
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
+import { useParams } from "next/navigation";
 
 export default function DividendDataCard() {
-
   const axiosInstence = useAxios();
+  const params = useParams();
 
-  const {data : cardData} = useQuery({
-    queryKey : ["devident-card-data"],
-    queryFn : async () => {
-      const res = await axiosInstence(`/portfolio/dividends/AAPL`);
+  const stockName = params.stockName as string;
+
+  console.log(stockName)
+
+  const { data: cardData } = useQuery({
+    queryKey: ["devident-card-data"],
+    queryFn: async () => {
+      const res = await axiosInstence(`/portfolio/dividends/${stockName.toUpperCase()}`);
       return res.data;
-    }
-  })
+    },
+  });
 
-  const cardData2 = cardData?.rawDividends?.length
-  const cardData3 = cardData?.rawDividends[cardData2 - 1]
+  const cardData2 = cardData?.rawDividends?.length;
+  const cardData3 = cardData?.rawDividends[cardData2 - 1];
 
   return (
     <div>
@@ -49,7 +54,9 @@ export default function DividendDataCard() {
           {/* Dividend Yield */}
           <div className="p-4">
             <p className="text-sm text-gray-600 font-medium">Dividend Yield</p>
-            <p className="text-base font-semibold mt-2">{cardData?.dividendYield}</p>
+            <p className="text-base font-semibold mt-2">
+              {cardData?.dividendYield}
+            </p>
             <div className="mt-3">
               <p className="text-xs text-gray-500">Sector: Technology</p>
               <p className="text-xs text-gray-500">Sector Average: 0.71%</p>
@@ -59,13 +66,17 @@ export default function DividendDataCard() {
           {/* Payout Ratio */}
           <div className="p-4">
             <p className="text-sm text-gray-600 font-medium">Payout Ratio</p>
-            <p className="text-base font-semibold mt-2">{cardData?.payoutRatio}</p>
+            <p className="text-base font-semibold mt-2">
+              {cardData?.payoutRatio}
+            </p>
           </div>
 
           {/* Dividend Growth */}
           <div className="p-4">
             <p className="text-sm text-gray-600 font-medium">Dividend Growth</p>
-            <p className="text-base font-semibold mt-2">{cardData?.dividendGrowth}</p>
+            <p className="text-base font-semibold mt-2">
+              {cardData?.dividendGrowth}
+            </p>
             <div className="mt-3">
               <p className="text-xs text-gray-500">Since 2012</p>
             </div>

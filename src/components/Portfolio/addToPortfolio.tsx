@@ -312,7 +312,12 @@ export default function AddToPortfolio() {
                                     <div className="text-sm font-medium">
                                         {parseFloat(stock.currentPrice)?.toFixed(2)}
                                     </div>
-                                    <div className="text-xs font-medium text-green-500">
+                                    <div
+                                        className={`text-xs font-medium text-green-500 ${parseFloat(stock.change) >= 0
+                                            ? "text-green-600"
+                                            : "text-red-600"
+                                            }`}
+                                    >
                                         {parseFloat(stock.change)?.toFixed(2)} (
                                         {parseFloat(stock.percent)?.toFixed(2)}%)
                                     </div>

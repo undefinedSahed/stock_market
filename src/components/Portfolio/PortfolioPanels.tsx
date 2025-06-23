@@ -114,7 +114,6 @@ export default function Home() {
               <div className="px-4 py-2 font-medium relative after:absolute after:top-0 after:left-0 after:content-[''] after:h-[5px] after:w-full after:bg-[#28A745]">
                 Overview
               </div>
-              <div className="px-4 py-2 text-gray-500">Smart Score</div>
             </div>
 
             <div className="py-6 text-center">

@@ -16,6 +16,7 @@ import {
   Menu,
   LogOut,
   type LucideIcon,
+  Bell,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
@@ -30,6 +31,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { useSession, signOut } from "next-auth/react"
+import { BiNotification } from "react-icons/bi"
 
 interface NavItem {
   name: string
@@ -95,7 +97,8 @@ export default function Navbar() {
 
     if (session?.user) {
       return (
-        <div className="hidden lg:block flex-shrink-0">
+        <div className="hidden lg:flex items-center gap-4 flex-shrink-0">
+          <Link href='/notification'><Bell className="text-green-600" /></Link>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <div
@@ -141,15 +144,6 @@ export default function Navbar() {
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
-              {/* <DropdownMenuItem>
-                <User className="mr-2 h-4 w-4" />
-                <span>Profile</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <Settings className="mr-2 h-4 w-4" />
-                <span>Settings</span>
-              </DropdownMenuItem>
-              <DropdownMenuSeparator /> */}
               <DropdownMenuItem className="text-red-600 focus:text-red-600 cursor-pointer" onClick={handleLogout}>
                 <LogOut className="mr-2 h-4 w-4" />
                 <span>Log out</span>
@@ -181,6 +175,7 @@ export default function Navbar() {
       return (
         <div className="mt-4 px-2 border-t pt-4">
           <div className="flex items-center gap-3 p-3 bg-green-50 rounded-lg mb-3">
+            <Link href='/notification'><BiNotification className="text-green-600" /></Link>
             <Avatar className="h-10 w-10">
               <AvatarImage
                 src={session.user.image || "/placeholder.svg?height=40&width=40"}
@@ -197,14 +192,6 @@ export default function Navbar() {
             </div>
           </div>
           <div className="space-y-2">
-            {/* <Button variant="outline" className="w-full justify-start" size="sm">
-              <User className="mr-2 h-4 w-4" />
-              Profile
-            </Button>
-            <Button variant="outline" className="w-full justify-start" size="sm">
-              <Settings className="mr-2 h-4 w-4" />
-              Settings
-            </Button> */}
             <Button
               variant="outline"
               className="w-full justify-start text-red-600 hover:text-red-600 hover:bg-red-50"
@@ -329,11 +316,10 @@ export default function Navbar() {
                           <Link
                             key={link.name}
                             href={link.href}
-                            className={`flex items-center gap-3 px-2 py-2 text-base font-medium rounded-lg transition-colors ${
-                              activeTab === link.name
-                                ? "text-green-600 bg-green-50"
-                                : "text-gray-700 hover:text-gray-900 hover:bg-gray-50"
-                            }`}
+                            className={`flex items-center gap-3 px-2 py-2 text-base font-medium rounded-lg transition-colors ${activeTab === link.name
+                              ? "text-green-600 bg-green-50"
+                              : "text-gray-700 hover:text-gray-900 hover:bg-gray-50"
+                              }`}
                             onClick={() => {
                               setActiveTab(link.name)
                               setOpen(false)

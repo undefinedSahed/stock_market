@@ -27,6 +27,7 @@ import { Input } from "@/components/ui/input";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import { useState } from "react";
+import { toast } from "sonner";
 
 // Zod schema for form validation
 const formSchema = z.object({
@@ -62,7 +63,8 @@ export function AddPortfolioDialog() {
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["portfolio"] });
-            setOpen(false); // close dialog on success
+            setOpen(false);
+            toast.success("Portfolio created successfully!");
         },
     });
 

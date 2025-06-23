@@ -1,31 +1,38 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Plus, Minus } from "lucide-react"
+import { useState } from "react";
+import { Plus, Minus } from "lucide-react";
 
-import { Button } from "@/components/ui/button"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import useAxios from "@/hooks/useAxios"
-import { useQuery } from "@tanstack/react-query"
+import { Button } from "@/components/ui/button";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import useAxios from "@/hooks/useAxios";
+import { useQuery } from "@tanstack/react-query";
 
 interface DividendData {
-  adjustedAmount: number
-  amount: number
-  currency: string
-  date: string // Ex-date
-  declarationDate: string
-  franking: number
-  freq: string
-  payDate: string
-  recordDate: string
-  symbol: string
+  adjustedAmount: number;
+  amount: number;
+  currency: string;
+  date: string; // Ex-date
+  declarationDate: string;
+  franking: number;
+  freq: string;
+  payDate: string;
+  recordDate: string;
+  symbol: string;
 }
 
 export default function DividendHistory() {
-  const [showAll, setShowAll] = useState(false)
-  const initialRows = 7
+  const [showAll, setShowAll] = useState(false);
+  const initialRows = 7;
 
-  const axiosInstance = useAxios()
+  const axiosInstance = useAxios();
 
   const {
     data: history,
@@ -34,76 +41,92 @@ export default function DividendHistory() {
   } = useQuery({
     queryKey: ["history-chart"],
     queryFn: async () => {
-      const res = await axiosInstance(`/portfolio/dividends/AAPL`)
-      return res.data.rawDividends as DividendData[]
+      const res = await axiosInstance(`/portfolio/dividends/AAPL`);
+      return res.data.rawDividends as DividendData[];
     },
-  })
+  });
 
   // Helper function to format date
   const formatDate = (dateString: string) => {
-    const date = new Date(dateString)
+    const date = new Date(dateString);
     return date.toLocaleDateString("en-US", {
       year: "numeric",
       month: "short",
       day: "numeric",
-    })
-  }
+    });
+  };
 
   // Helper function to get frequency text
-  const getFrequencyText = (freq: string) => {
-    switch (freq) {
+  const getFrequencyText = (freq: string | number): string => {
+    switch (freq.toString()) {
+      case "0":
+        return "Annually";
       case "1":
-        return "Annual"
+        return "Monthly";
       case "2":
-        return "Semi-Annual"
+        return "Quarterly";
+      case "3":
+        return "Semi-annually";
       case "4":
-        return "Quarterly"
-      case "12":
-        return "Monthly"
+        return "Other/Unknown";
+      case "5":
+        return "Bimonthly";
+      case "6":
+        return "Trimesterly";
+      case "7":
+        return "Weekly";
       default:
-        return "Quarterly"
+        return "Other/Unknown";
     }
-  }
+  };
 
   // Helper function to format currency
   const formatCurrency = (amount: number, currency = "USD") => {
     return new Intl.NumberFormat("en-US", {
       style: "currency",
       currency: currency,
-    }).format(amount)
-  }
+    }).format(amount);
+  };
 
   // Sort data by date (most recent first) and slice for display
-  const sortedData = history ? [...history].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()) : []
+  const sortedData = history
+    ? [...history].sort(
+        (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+      )
+    : [];
 
-  const displayedRows = showAll ? sortedData : sortedData.slice(0, initialRows)
+  const displayedRows = showAll ? sortedData : sortedData.slice(0, initialRows);
 
   const toggleShowAll = () => {
-    setShowAll(!showAll)
-  }
+    setShowAll(!showAll);
+  };
 
   if (isLoading) {
     return (
       <div className="flex items-center justify-center p-8">
         <div className="text-lg">Loading dividend history...</div>
       </div>
-    )
+    );
   }
 
   if (error) {
     return (
       <div className="flex items-center justify-center p-8">
-        <div className="text-lg text-red-600">Error loading dividend history. Please try again.</div>
+        <div className="text-lg text-red-600">
+          Error loading dividend history. Please try again.
+        </div>
       </div>
-    )
+    );
   }
 
   if (!history || history.length === 0) {
     return (
       <div className="flex items-center justify-center p-8">
-        <div className="text-lg text-gray-600">No dividend history available.</div>
+        <div className="text-lg text-gray-600">
+          No dividend history available.
+        </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -125,12 +148,24 @@ export default function DividendHistory() {
           <TableBody>
             {displayedRows.map((row, index) => (
               <TableRow key={`${row.date}-${index}`}>
-                <TableCell className="text-center">{formatDate(row.date)}</TableCell>
-                <TableCell className="text-center">{formatDate(row.recordDate)}</TableCell>
-                <TableCell className="text-center">{formatDate(row.payDate)}</TableCell>
-                <TableCell className="text-center">{getFrequencyText(row.freq)}</TableCell>
-                <TableCell className="text-center">{formatDate(row.declarationDate)}</TableCell>
-                <TableCell className="text-center">{formatCurrency(row.amount, row.currency)}</TableCell>
+                <TableCell className="text-center">
+                  {formatDate(row.date)}
+                </TableCell>
+                <TableCell className="text-center">
+                  {formatDate(row.recordDate)}
+                </TableCell>
+                <TableCell className="text-center">
+                  {formatDate(row.payDate)}
+                </TableCell>
+                <TableCell className="text-center">
+                  {getFrequencyText(row.freq)}
+                </TableCell>
+                <TableCell className="text-center">
+                  {formatDate(row.declarationDate)}
+                </TableCell>
+                <TableCell className="text-center">
+                  {formatCurrency(row.amount, row.currency)}
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>
@@ -158,5 +193,5 @@ export default function DividendHistory() {
         </Button>
       )}
     </div>
-  )
+  );
 }

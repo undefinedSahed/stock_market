@@ -1,125 +1,149 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useState, useRef, useEffect } from "react"
-import { Loader2 } from "lucide-react"
+import { useState, useRef, useEffect } from "react";
+import { Loader2 } from "lucide-react";
 
 interface OtpVerificationStepProps {
-  email: string
-  onNext: () => void
-  onBack: () => void
-  onUpdateData: (data: { otp: string }) => void
+  email: string;
+  onNext: () => void;
+  onBack: () => void;
+  onUpdateData: (data: { otp: string }) => void;
 }
 
-export default function OtpVerificationStep({ email, onNext, onBack, onUpdateData }: OtpVerificationStepProps) {
-  const [otp, setOtp] = useState<string[]>(["", "", "", "", "", ""])
-  const [isVerifying, setIsVerifying] = useState(false)
-  const [isResending, setIsResending] = useState(false)
-  const [error, setError] = useState("")
-  const inputRefs = useRef<(HTMLInputElement | null)[]>([])
+export default function OtpVerificationStep({
+  email,
+  onNext,
+  onBack,
+  onUpdateData,
+}: OtpVerificationStepProps) {
+  const [otp, setOtp] = useState<string[]>(["", "", "", "", "", ""]);
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [isResending, setIsResending] = useState(false);
+  const [error, setError] = useState("");
+  const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   useEffect(() => {
-    const firstEmptyIndex = otp.findIndex((digit) => digit === "")
+    const firstEmptyIndex = otp.findIndex((digit) => digit === "");
     if (firstEmptyIndex !== -1 && inputRefs.current[firstEmptyIndex]) {
-      inputRefs.current[firstEmptyIndex]?.focus()
+      inputRefs.current[firstEmptyIndex]?.focus();
     }
-  }, [otp])
+  }, [otp]);
 
   const handleChange = (index: number, value: string) => {
-    if (!/^\d*$/.test(value)) return
+    if (!/^\d*$/.test(value)) return;
 
-    const newOtp = [...otp]
-    newOtp[index] = value.slice(-1)
-    setOtp(newOtp)
+    const newOtp = [...otp];
+    newOtp[index] = value.slice(-1);
+    setOtp(newOtp);
 
     if (value && index < 5) {
-      inputRefs.current[index + 1]?.focus()
+      inputRefs.current[index + 1]?.focus();
     }
-  }
+  };
 
-  const handleKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleKeyDown = (
+    index: number,
+    e: React.KeyboardEvent<HTMLInputElement>
+  ) => {
     if (e.key === "Backspace" && !otp[index] && index > 0) {
-      inputRefs.current[index - 1]?.focus()
+      inputRefs.current[index - 1]?.focus();
     }
-  }
+  };
 
   const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
-    e.preventDefault()
-    const pastedData = e.clipboardData.getData("text/plain").trim()
+    e.preventDefault();
+    const pastedData = e.clipboardData.getData("text/plain").trim();
 
-    if (!/^\d+$/.test(pastedData)) return
+    if (!/^\d+$/.test(pastedData)) return;
 
-    const digits = pastedData.split("").slice(0, 6)
-    const newOtp = [...otp]
+    const digits = pastedData.split("").slice(0, 6);
+    const newOtp = [...otp];
 
     digits.forEach((digit, index) => {
-      if (index < 6) newOtp[index] = digit
-    })
+      if (index < 6) newOtp[index] = digit;
+    });
 
-    setOtp(newOtp)
+    setOtp(newOtp);
 
-    const nextEmptyIndex = newOtp.findIndex((digit) => digit === "")
+    const nextEmptyIndex = newOtp.findIndex((digit) => digit === "");
     if (nextEmptyIndex !== -1) {
-      inputRefs.current[nextEmptyIndex]?.focus()
+      inputRefs.current[nextEmptyIndex]?.focus();
     } else {
-      inputRefs.current[5]?.focus()
+      inputRefs.current[5]?.focus();
     }
-  }
+  };
 
   const handleResendOtp = async () => {
-    setIsResending(true)
-    setError("")
+    setIsResending(true);
+    setError("");
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/forgot-password`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email: email,
-        }),
-      })
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/auth/forgot-password`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            email: email,
+          }),
+        }
+      );
 
       if (!response.ok) {
-        const result = await response.json()
-        throw new Error(result.message || "Failed to resend OTP")
+        const result = await response.json();
+        throw new Error(result.message || "Failed to resend OTP");
       }
 
       // Reset OTP fields
-      setOtp(["", "", "", "", "", ""])
+      setOtp(["", "", "", "", "", ""]);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to resend OTP")
+      setError(err instanceof Error ? err.message : "Failed to resend OTP");
     } finally {
-      setIsResending(false)
+      setIsResending(false);
     }
-  }
+  };
 
   const handleVerify = async () => {
-    const otpString = otp.join("")
+    const otpString = otp.join("");
 
     if (otpString.length !== 6) {
-      setError("Please enter the complete 6-digit OTP")
-      return
+      setError("Please enter the complete 6-digit OTP");
+      return;
     }
 
-    setIsVerifying(true)
-    setError("")
+    setIsVerifying(true);
+    setError("");
 
     try {
-      // For now, we'll assume OTP verification is handled on the backend
-      // and we proceed to the next step. In a real implementation,
-      // you might have a separate OTP verification endpoint.
-
-      onUpdateData({ otp: otpString })
-      onNext()
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/auth/verify-otp`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            email: email,
+            otp: otpString,
+          }),
+        }
+      );
+      if (!response.ok) {
+        const result = await response.json();
+        throw new Error(result.message || "Invalid OTP");
+      }
+      onUpdateData({ otp: otpString });
+      onNext();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Invalid OTP")
+      setError(err instanceof Error ? err.message : "Invalid OTP");
     } finally {
-      setIsVerifying(false)
+      setIsVerifying(false);
     }
-  }
+  };
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-[#eaf6ec]">
@@ -146,7 +170,7 @@ export default function OtpVerificationStep({ email, onNext, onBack, onUpdateDat
               <input
                 key={index}
                 ref={(el) => {
-                  inputRefs.current[index] = el
+                  inputRefs.current[index] = el;
                 }}
                 type="text"
                 inputMode="numeric"
@@ -198,5 +222,5 @@ export default function OtpVerificationStep({ email, onNext, onBack, onUpdateDat
         </div>
       </div>
     </div>
-  )
+  );
 }

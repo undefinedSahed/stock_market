@@ -36,7 +36,7 @@ export default function RootLayout({
             <SocketProvider>{children}</SocketProvider>
           </LayoutWrapper>
         </AuthSessionProvider>
-        <Toaster />
+        <Toaster position="top-right"/>
       </body>
     </html>
   );

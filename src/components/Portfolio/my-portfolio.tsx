@@ -9,37 +9,50 @@ import AddToPortfolio from "./addToPortfolio"
 import { AddPortfolioDialog } from "./add-portfolio-dialog"
 import { usePortfolio } from "./portfolioContext"
 import { SocketProvider } from "@/providers/SocketProvider"
+import { Loader2 } from "lucide-react"
 
 const MyPortfolio = () => {
+  const { data: session } = useSession();
+  const { selectedPortfolioId } = usePortfolio();
 
-  const { data: session } = useSession()
+  const isQueryEnabled = !!session?.user?.accessToken && !!selectedPortfolioId;
 
-  const { selectedPortfolioId } = usePortfolio(); // Use selectedPortfolioId from context
-
-  // Fetch portfolio data for selected ID
-  const { data: portfolioData } = useQuery({
-    queryKey: ["portfolio", selectedPortfolioId], // add selectedPortfolioId to the query key
+  const {
+    data: portfolioData,
+    isLoading,
+    isFetching,
+    isFetched,
+  } = useQuery({
+    queryKey: ["portfolio", selectedPortfolioId],
     queryFn: async () => {
-      // If selectedPortfolioId is undefined (initial load before a selection), prevent the fetch.
-      // The `enabled` prop below also handles this, but it's good to be explicit here too.
-      if (!selectedPortfolioId) {
-        return null;
-      }
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/portfolio/get/${selectedPortfolioId}`, {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${session?.user?.accessToken}`,
-        },
-      });
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/portfolio/get/${selectedPortfolioId}`,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session?.user?.accessToken}`,
+          },
+        }
+      );
       const data = await res.json();
       return data;
     },
-    enabled: !!session?.user?.accessToken && !!selectedPortfolioId, // only run when both are available
+    enabled: isQueryEnabled,
   });
 
+  // Show loading if the query is enabled and is either loading or not yet fetched
+  if (isQueryEnabled && (isLoading || !isFetched)) {
+    return (
+      <div className="w-[80vw] flex justify-center items-center h-[80vh]">
+        <div className="text-center">
+          <Loader2 className="animate-spin h-10 w-10 text-green-500" />
+        </div>
+      </div>
+    );
+  }
 
-
-  if (!portfolioData) {
+  // After query is finished and portfolioData is still nullish
+  if (isQueryEnabled && isFetched && !portfolioData) {
     return (
       <div className="w-[80vw] flex justify-center items-center h-[80vh]">
         <div className="text-center">
@@ -49,10 +62,10 @@ const MyPortfolio = () => {
           <AddPortfolioDialog />
         </div>
       </div>
-    )
+    );
   }
 
-
+  // If portfolio is empty
   if (portfolioData?.stocks?.length === 0) {
     return (
       <div className="flex justify-center items-center">
@@ -62,7 +75,7 @@ const MyPortfolio = () => {
           </SocketProvider>
         </div>
       </div>
-    )
+    );
   }
 
 

@@ -30,7 +30,6 @@ export default function RootLayout({
               </main>
             </div>
           </div>
-          <Toaster />
         </SidebarProvider>
       </DashProvider>
     </div>

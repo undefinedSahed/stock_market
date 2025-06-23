@@ -411,14 +411,190 @@ export default function PortfolioTable() {
           </Table>
         </TabsContent>
 
+
         {/* tipranks content */}
         <TabsContent value="tipranks">
           <h3 className="text-center py-10 text-2xl font-semibold text-[#28A745]">Olive Stocks Essential&apos;s data will appear there</h3>
         </TabsContent>
 
-        {/* holdings */}
+
+        {/* Holdings Data */}
         <TabsContent value="holdings">
-          <h3 className="text-center py-10 text-2xl font-semibold text-[#28A745]">Holdings data will appear there</h3>
+          <Table>
+            <TableHeader>
+              <TableRow className="bg-[#EAF6EC] h-[70px]">
+                <TableHead className="w-[120px]  text-center">Stock Name</TableHead>
+                <TableHead className="w-[120px]  text-center">Number of Shares</TableHead>
+                <TableHead className="text-center">Price</TableHead>
+                <TableHead className="text-center">Price Change</TableHead>
+                <TableHead className="text-center">Ai Catalyst</TableHead>
+                <TableHead className="text-center">Ai Consensus</TableHead>
+                <TableHead className="text-center">Analyst Price Target</TableHead>
+                <TableHead className="text-center">Smart Score</TableHead>
+                <TableHead className="text-center">Holding Value</TableHead>
+                <TableHead className="text-center">Holding Gain</TableHead>
+                <TableHead className="text-center">Top Analyst Consensus</TableHead>
+                <TableHead className="text-center">Alerts</TableHead>
+                <TableHead className="text-center">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody className="text-center">
+              {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+              {overviewData?.holdings?.map((item: any, index: number) => (
+                <TableRow key={index} className="h-24">
+                  <TableCell className="font-medium">
+                    <Link href={`/stock/${item.symbol.toLowerCase()}?q=${item.symbol}`}>
+                      <div className="flex justify-center">
+                        <div className="flex items-center gap-2">
+                          <div className="flex w-8 h-8 rounded-full bg-black justify-center items-center p-2">
+                            <Image
+                              src={item.logo}
+                              alt={item.symbol}
+                              width={350}
+                              height={200}
+                              className="w-5 h-5 object-cover"
+                            />
+                          </div>
+                          <div className="">
+                            <span className="hover:underline hover:text-blue-400">{item.symbol}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </Link>
+                  </TableCell>
+                  <TableCell className="">
+                    <div className="flex gap-1 text-center items-center">
+                      <span><IoWarningOutline className="text-[#FFD700]" /></span>
+                      <Input
+                        value={editableShares[item.symbol] ?? ""}
+                        className="text-center w-14"
+                        onChange={(e) =>
+                          setEditableShares((prev) => ({
+                            ...prev,
+                            [item.symbol]: Number(e.target.value),
+                          }))
+                        }
+                      />
+                      <span><FiEdit2 onClick={() => handleUpdateQuantity(item.symbol, editableShares[item.symbol])} className="text-[#28A745] cursor-pointer" /></span>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    ${item.price}
+                  </TableCell>
+                  <TableCell className="">
+                    <div className="">
+                      <p className="flex flex-col">
+                        <span className="">${item.change}</span>
+                        <p className="flex items-center">
+                          <span>{item.change > 0 ? <FaCaretUp className="text-2xl text-green-500" /> : <FaCaretDown className="text-red-500 text-2xl" />}</span>
+                          <span className={item.change > 0 ? "text-green-500" : "text-red-500"}>${item.percent.toFixed(2)}%</span>
+                        </p>
+                      </p>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex justify-center">
+                      <Image
+                        src="/images/Ai.png"
+                        alt={item.ticker}
+                        width={350}
+                        height={200}
+                        className="w-5 h-5 object-cover"
+                      />
+                    </div>
+                  </TableCell>
+                  <TableCell>Moderate Buy</TableCell>
+                  <TableCell>
+                    <div className="relative w-9 h-9 mx-auto flex items-center justify-center">
+                      {/* Green Glow */}
+                      <div className="absolute w-full h-full bg-[#28A745] rounded-full blur-[6px]"></div>
+
+                      {/* Lock Image (on top of glow) */}
+                      <Image
+                        src="/images/lock.png"
+                        alt={item.ticker}
+                        width={350}
+                        height={200}
+                        className="w-5 h-5 object-cover relative z-10"
+                      />
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="relative w-9 h-9 mx-auto flex items-center justify-center">
+                      {/* Green Glow */}
+                      <div className="absolute w-full h-full bg-[#28A745] rounded-full blur-[6px]"></div>
+
+                      {/* Lock Image (on top of glow) */}
+                      <Image
+                        src="/images/lock.png"
+                        alt={item.ticker}
+                        width={350}
+                        height={200}
+                        className="w-5 h-5 object-cover relative z-10"
+                      />
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-center">
+                    ${item.value}
+                  </TableCell>
+                  <TableCell className="">
+                    <div className={`${item.percent < 0 ? "text-red-500" : "text-[#28A745]"} flex items-center gap-2`}>
+                      <span>{item.percent < 0 ? <FaCaretDown className="text-red-500 text-xl" /> : <FaCaretUp className="text-xl text-[#28A745]" />}</span>
+                      {item.percent?.toFixed(2)}%
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="relative w-9 h-9 mx-auto flex items-center justify-center">
+                      {/* Green Glow */}
+                      <div className="absolute w-full h-full bg-[#28A745] rounded-full blur-[6px]"></div>
+
+                      {/* Lock Image (on top of glow) */}
+                      <Image
+                        src="/images/lock.png"
+                        alt={item.ticker}
+                        width={350}
+                        height={200}
+                        className="w-5 h-5 object-cover relative z-10"
+                      />
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex justify-center">
+                      <IoNotificationsOutline className="h-4 w-4" />
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex justify-center cursor-pointer">
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          {/* Use a button or div if you don't want a default button style */}
+                          <Trash className="h-4 w-4 text-red-500 hover:text-red-700 transition-colors" />
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Are you sure you want to delete {item.symbol}?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              This action cannot be undone. This will permanently remove {item.symbol} from your portfolio.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction
+                              onClick={() => handleDelete(item.symbol)}
+                              disabled={isDeletingStock} // Disable button while deleting
+                              className="bg-red-500 hover:bg-red-600 text-white"
+                            >
+                              {isDeletingStock ? 'Deleting...' : 'Delete'}
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
         </TabsContent>
 
         {/* performance */}
