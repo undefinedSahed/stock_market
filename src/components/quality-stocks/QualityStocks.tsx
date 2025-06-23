@@ -20,6 +20,7 @@ import {
   type SortingState,
   type Column,
 } from "@tanstack/react-table";
+import Link from "next/link";
 
 type Stock = {
   symbol: string;
@@ -63,19 +64,21 @@ export default function StockTable() {
       columnHelper.accessor("symbol", {
         header: "Company",
         cell: (info) => (
-          <div className="flex items-center">
-            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-green-100 flex items-center justify-center">
-              <Image
-                src={info.row.original.logo || "/placeholder.svg"}
-                alt="logo"
-                width={10}
-                height={10}
-                className="h-8 w-8"
-              />
-            </div>
-            <span className="ml-2 text-xs sm:text-sm font-medium hidden sm:block">
-              {info.getValue()}
-            </span>
+          <div>
+            <Link href={`/search-result?q=${info.getValue()}`} className="flex items-center">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full">
+                <Image
+                  src={info.row.original.logo || "/placeholder.svg"}
+                  alt="logo"
+                  width={1000}
+                  height={1000}
+                  className="h-8 w-8"
+                />
+              </div>
+              <span className="ml-2 text-xs sm:text-sm font-medium hidden sm:block">
+                {info.getValue()}
+              </span>
+            </Link>
           </div>
         ),
         enableSorting: true,
