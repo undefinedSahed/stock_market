@@ -1,7 +1,6 @@
 import BannerAds from '@/components/murakkabs_portfolio/BannerAds';
 import { OverviewSidebar } from '@/components/overview/overview-sidebar';
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
-import { Toaster } from '@/components/ui/toaster';
 import type React from 'react';
 
 export default function ProfileLayout({ children }: { children: React.ReactNode }) {

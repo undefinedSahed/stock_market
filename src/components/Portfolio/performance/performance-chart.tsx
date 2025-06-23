@@ -50,7 +50,7 @@ export default function PerformanceDashboard() {
                         className="h-5 w-5 rounded-full bg-green-500 border-green-500 text-white"
                     />
                     <Label htmlFor="murakkab" className="text-base font-medium">
-                        Olive Stock's Average
+                        Olive Stock&apos;s Average
                     </Label>
                 </div>
 
@@ -83,7 +83,7 @@ export default function PerformanceDashboard() {
                 <div className="flex flex-col gap-2 mt-4 col-span-1">
                     <div className="flex items-center gap-2">
                         <div className="w-4 h-4 bg-green-500 rounded-sm"></div>
-                        <span className="text-sm">Olive Stock's Average</span>
+                        <span className="text-sm">Olive Stock&apos;s Average</span>
                     </div>
                     <div className="flex items-center gap-2">
                         <div className="w-4 h-4 bg-yellow-400 rounded-sm"></div>

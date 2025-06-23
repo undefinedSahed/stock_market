@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  Database,
   LayoutDashboard,
   LogOut,
   MicVocal,
@@ -36,6 +37,18 @@ const items = [
     url: "/dashboard/set-search-result",
     addUrl: "/dashboard/youtube-video/add-set-search-result",
     icon: Search,
+  },
+  {
+    title: "Quality Stocks",
+    url: "/dashboard/quality-stocks",
+    addUrl: "/dashboard/quality-stocks/add-quality-stocks",
+    icon: Database,
+  },
+  {
+    title: "Olive Stocks Portfolio",
+    url: "/dashboard/olive-stock-portfolio",
+    addUrl: "/dashboard/olive-stock-portfolio/add-olive-stock",
+    icon: Database,
   },
   {
     title: "Youtube Video",

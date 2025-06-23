@@ -20,7 +20,6 @@ const MyPortfolio = () => {
   const {
     data: portfolioData,
     isLoading,
-    isFetching,
     isFetched,
   } = useQuery({
     queryKey: ["portfolio", selectedPortfolioId],

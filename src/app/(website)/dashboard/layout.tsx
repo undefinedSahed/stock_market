@@ -2,7 +2,6 @@ import type React from "react"
 import { SidebarProvider } from "@/components/ui/sidebar"
 import { AppSidebar } from "./_components/Sidebar"
 import DashProvider from "@/providers/DashProvider"
-import { Toaster } from "sonner"
 import { DashboardHeader } from "@/components/shared/dashboard-header"
 
 export const metadata = {
