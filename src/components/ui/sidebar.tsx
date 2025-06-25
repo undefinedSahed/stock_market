@@ -199,7 +199,6 @@ const Sidebar = React.forwardRef<
 
     // const isSmallScreen = useIsSmallScreen(); 
     if (isSmallScreen) {
-      console.log("small screen is true");
       return (
         <Sheet open={openMobile} onOpenChange={setOpenMobile} {...props}>
           <SheetContent

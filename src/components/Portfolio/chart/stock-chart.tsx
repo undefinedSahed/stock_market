@@ -137,7 +137,6 @@ export default function StockChart({ selectedStock, timeframe, comparisonStocks 
             const { from, to, resolution } = getTimeframeParams(timeframe);
             const apiUrl = `${process.env.NEXT_PUBLIC_API_URL}/portfolio/chart?symbol=${symbol}&resolution=${resolution}&from=${from}&to=${to}`;
 
-            console.log(`Fetching data for: ${symbol} from ${apiUrl}`);
             const response = await fetch(apiUrl);
 
             const contentType = response.headers.get("content-type");
@@ -157,8 +156,6 @@ export default function StockChart({ selectedStock, timeframe, comparisonStocks 
                 console.warn(`API returned error status: ${data.s} for ${symbol}.`);
                 return null; // Indicate failure
             }
-
-            console.log(`Successfully fetched real data for ${symbol}.`);
             return data;
         } catch (error) {
             console.error(`Error fetching data for ${symbol}:`, error);

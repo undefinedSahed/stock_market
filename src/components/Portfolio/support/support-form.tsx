@@ -44,14 +44,9 @@ export default function SupportForm() {
 
     async function onSubmit(data: FormValues) {
         setIsSubmitting(true)
-
+        console.log(data)
         try {
-            // This is where you would submit the form data to your API
-            console.log("Form data:", data)
-
-            // Simulate API call
             await new Promise((resolve) => setTimeout(resolve, 1000))
-
             setSubmitSuccess(true)
             form.reset()
         } catch (error) {

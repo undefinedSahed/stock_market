@@ -157,12 +157,6 @@ const Page = () => {
       formData.append("blogDescription", data.blogDescription)
       formData.append("imageLink", image.file) // Add the actual image file
 
-      console.log("FormData contents:", {
-        blogTitle: data.blogTitle,
-        blogDescription: data.blogDescription,
-        imageFile: image.file.name,
-      })
-
       await mutateAsync(formData)
     } catch (error) {
       console.error("Error creating blog:", error)

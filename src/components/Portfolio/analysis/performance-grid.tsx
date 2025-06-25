@@ -36,17 +36,6 @@ export default function PerformanceGrid() {
 
     console.log(setData);
 
-    // Simulate API fetch - in a real app, you would fetch from your API
-    // useEffect(() => {
-    //     // This would be your API call
-    //     // const fetchData = async () => {
-    //     //   const response = await fetch('/api/portfolio-data');
-    //     //   const data = await response.json();
-    //     //   setData(data);
-    //     // };
-    //     // fetchData();
-    // }, [])
-
     return (
         <div className="w-full">
             <h1 className="text-3xl font-bold mb-6">Performance</h1>

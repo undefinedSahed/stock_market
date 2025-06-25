@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react"
 import * as echarts from "echarts"
+import { useSearchParams } from "next/navigation"
 
 interface Node {
   name: string
@@ -23,12 +24,15 @@ interface SankeyChartProps {
   className?: string
 }
 
-export default function SankeyChart({ symbol = "AAPL", className = "" }: SankeyChartProps) {
+export default function SankeyChart({ className = "" }: SankeyChartProps) {
   const chartRef = useRef<HTMLDivElement>(null)
   const chartInstance = useRef<echarts.ECharts | null>(null)
   const [data, setData] = useState<SankeyData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+
+  const params = useSearchParams();
+  const query = params.get('q')
 
   // Fetch data from API
   useEffect(() => {
@@ -37,7 +41,7 @@ export default function SankeyChart({ symbol = "AAPL", className = "" }: SankeyC
         setLoading(true)
         setError(null)
 
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/stocks/revenue-breakdown?symbol=${symbol}`)
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/stocks/revenue-breakdown?symbol=${query}`)
 
         if (!response.ok) {
           throw new Error(`Failed to fetch data: ${response.statusText}`)
@@ -54,7 +58,7 @@ export default function SankeyChart({ symbol = "AAPL", className = "" }: SankeyC
     }
 
     fetchData()
-  }, [symbol])
+  }, [query])
 
   // Initialize and update chart
   useEffect(() => {
@@ -192,7 +196,7 @@ export default function SankeyChart({ symbol = "AAPL", className = "" }: SankeyC
   return (
     <div className={`w-full ${className}`}>
       <div className="mb-4">
-        <h2 className="text-2xl font-bold text-gray-800">Revenue Breakdown - {symbol}</h2>
+        <h2 className="text-2xl font-bold text-gray-800">Revenue Breakdown - {query}</h2>
         <p className="text-gray-600">Financial flow visualization</p>
       </div>
       <div

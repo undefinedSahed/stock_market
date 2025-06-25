@@ -1,11 +1,11 @@
 import PrivateHome from "@/components/PrivateHome/PrivateHome"
 
-const page = () => {
+const PrivateHomePage = () => {
   return (
     <div>
-        <PrivateHome />
+      <PrivateHome />
     </div>
   )
 }
 
-export default page
+export default PrivateHomePage

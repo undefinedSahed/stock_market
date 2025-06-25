@@ -1,24 +1,26 @@
 "use client";
 
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowRight, Edit2 } from "lucide-react";
 import { useSession } from "next-auth/react";
-import { useEffect } from "react"; // Removed useState
+import { useEffect, useState } from "react";
 import { FaCaretUp, FaCaretDown } from "react-icons/fa";
-import { usePortfolio } from "./portfolioContext"; // Import usePortfolio
+import { usePortfolio } from "./portfolioContext";
 import { AddPortfolioDialog } from "./add-portfolio-dialog";
 import AddToPortfolioDialog from "./add-holding-dialog";
+import { Input } from "../ui/input";
+import { toast } from "sonner";
 
 export default function Home() {
   const { data: session } = useSession();
-  const { selectedPortfolioId } = usePortfolio(); // Use selectedPortfolioId from context
+  const { selectedPortfolioId } = usePortfolio();
+  const [cashValue, setCashValue] = useState<string>("");
+
 
   // Fetch portfolio data for selected ID
   const { data: portfolioData } = useQuery({
-    queryKey: ["portfolio", selectedPortfolioId], // add selectedPortfolioId to the query key
+    queryKey: ["portfolio", selectedPortfolioId],
     queryFn: async () => {
-      // If selectedPortfolioId is undefined (initial load before a selection), prevent the fetch.
-      // The `enabled` prop below also handles this, but it's good to be explicit here too.
       if (!selectedPortfolioId) {
         return null;
       }
@@ -31,11 +33,10 @@ export default function Home() {
       const data = await res.json();
       return data;
     },
-    enabled: !!session?.user?.accessToken && !!selectedPortfolioId, // only run when both are available
+    enabled: !!session?.user?.accessToken && !!selectedPortfolioId,
   });
 
 
-  // Trigger overview when portfolioData is ready
   const { mutate: getGainLose, data: gainLoseData } = useMutation({
     mutationFn: async (symbols: string[]) => {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/portfolio/topmovers`, {
@@ -55,13 +56,13 @@ export default function Home() {
   });
 
   const { mutate: getOverview, data: overviewData } = useMutation({
-    mutationFn: async (holdings: { symbol: string; shares: number }[]) => {
+    mutationFn: async (portfolioId: string) => {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/portfolio/overview`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ holdings }),
+        body: JSON.stringify({ id: portfolioId }),
       });
 
       if (!res.ok) {
@@ -72,27 +73,62 @@ export default function Home() {
     },
   });
 
+
+
   useEffect(() => {
     if (portfolioData && portfolioData.stocks && portfolioData.stocks.length > 0) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const symbols = portfolioData.stocks.map((stock: any) => stock.symbol);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const holdings = portfolioData.stocks.map((stock: any) => ({
-        symbol: stock.symbol,
-        shares: stock.quantity,
-      }));
-      getOverview(holdings);
       getGainLose(symbols);
     }
-    // No need to set selectedPortfolioId here, as it's now controlled by the context
   }, [portfolioData, getGainLose, getOverview]);
 
+
+  useEffect(() => {
+    if (selectedPortfolioId) {
+      getOverview(selectedPortfolioId);
+    }
+  }, [selectedPortfolioId, getOverview]);
 
   const dailyReturn = overviewData?.dailyReturn ?? 0;
   const dailyReturnPercent = overviewData?.dailyReturnPercent ?? 0;
   const isReturnPositive = dailyReturn >= 0;
   const isReturnPercentPositive = dailyReturnPercent >= 0;
 
+  const isMonthlyReturnPercentPositive = overviewData?.monthlyReturnPrecent >= 0;
+
+
+  const queryClient = useQueryClient();
+
+  const { mutate: updateCash, isPending } = useMutation({
+    mutationFn: async () => {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/protfolio/${selectedPortfolioId}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session?.user?.accessToken}`,
+        },
+        body: JSON.stringify({ cash: Number(cashValue) }),
+      });
+
+      if (!res.ok) throw new Error("Failed to update");
+      return res.json();
+    },
+    onSuccess: () => {
+      toast.success("Cash updated successfully!");
+      queryClient.invalidateQueries({ queryKey: ["portfolio", selectedPortfolioId] });
+      getOverview(selectedPortfolioId as string);
+    },
+    onError: () => {
+      toast.error("Error updating cash");
+    },
+  });
+
+  useEffect(() => {
+    if (overviewData?.cash !== undefined) {
+      setCashValue(String(overviewData.cash));
+    }
+  }, [overviewData?.cash]);
 
   return (
     <div className="flex flex-col ">
@@ -116,21 +152,38 @@ export default function Home() {
               </div>
             </div>
 
-            <div className="py-6 text-center">
-              <h1 className="text-[40px] text-[#595959] font-bold">${overviewData?.totalHoldings}</h1>
+            <div className="py-3 text-center">
+              <h1 className="text-[40px] text-[#595959] font-bold">${overviewData?.totalValueWithCash}</h1>
             </div>
 
             <div className="text-sm text-gray-600 mt-4 text-center">
               Total Holdings
             </div>
 
-            <div className="flex text-center items-center justify-center mt-2 py-2">
-              <div>Portfolio Cash : </div>
+            <div className="flex text-center items-center justify-center mt-2 py-2 gap-2">
+              <div>Portfolio Cash:</div>
               <div className="flex items-center gap-2">
-                <span>&nbsp;${overviewData?.totalHoldings}</span>
-                <Edit2 className="h-4 w-4 text-gray-400" />
+                <Input
+                  type="number"
+                  className="w-32"
+                  value={cashValue}
+                  onChange={(e) => setCashValue(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") updateCash();
+                  }}
+                  disabled={isPending}
+                  placeholder="Enter cash"
+                />
+                <button
+                  onClick={() => updateCash()}
+                  disabled={isPending}
+                  className="hover:text-black text-gray-400 transition"
+                >
+                  <Edit2 className="h-4 w-4" />
+                </button>
               </div>
             </div>
+
 
             <div className="mt-4">
               <div className="flex divide-x divide-gray-200">
@@ -151,8 +204,9 @@ export default function Home() {
 
                 {/* Daily Return */}
                 <div className="flex-1 px-4 mt-9">
-                  <div className="h-8 flex items-center justify-center">
-                    ---
+                  <div className={`flex items-center ${isMonthlyReturnPercentPositive ? "text-green-500" : "text-red-500"}`}>
+                    {isMonthlyReturnPercentPositive ? <FaCaretUp className="w-6 h-6 mr-1" /> : <FaCaretDown className="w-6 h-6 mr-1" />}
+                    <span className="text-lg font-semibold">{overviewData?.monthlyReturnPercent}%</span>
                   </div>
                   <div className="text-xs text-center">
                     30 Day Return
@@ -254,7 +308,6 @@ export default function Home() {
               <div className="px-4 py-2 font-medium relative after:absolute after:top-0 after:left-0 after:content-[''] after:h-[5px] after:w-full after:bg-[#28A745]">
                 Overview
               </div>
-              <div className="px-4 py-2 text-gray-500">Smart Score</div>
             </div>
 
             <div className="flex items-center justify-center h-48">

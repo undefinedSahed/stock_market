@@ -166,11 +166,6 @@ const Page = () => {
       formData.append("imageLink", image.file); // Add the actual image file
       formData.append("source", "admin")
 
-      console.log("FormData contents:", {
-        newsTitle: data.newsTitle,
-        newsDescription: data.newsDescription,
-        imageFile: image.file.name,
-      });
 
       await mutateAsync(formData);
     } catch (error) {

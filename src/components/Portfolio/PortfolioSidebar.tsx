@@ -124,9 +124,6 @@ export function PortfolioSidebar() {
     }
   }, [portfolioData, selectedPortfolioId, setSelectedPortfolioId])
 
-
-  console.log(portfolioData)
-
   return (
     <Sidebar className="max-h-lvh z-40  shadow-[2px_0px_8px_0px_#00000029]">
       <SidebarContent>

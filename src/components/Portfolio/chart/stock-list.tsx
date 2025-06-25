@@ -70,7 +70,6 @@ export default function StockList({ onSelectStock, selectedStock }: StockListPro
         }
     }, [portfolioData, getOverview]);
 
-    console.log("overview data: ", overviewData)
 
     return (
         <Card>

@@ -79,9 +79,6 @@ export default function PortfolioStockTable() {
       // Close modal and reset state
       setDeleteModalOpen(false);
       setStockToDelete(null);
-
-      // Optional: Show success message
-      console.log(`Successfully deleted ${stockToDelete.symbol}`);
     } catch (error) {
       console.error("Error deleting stock:", error);
       // Optional: Show error message to user

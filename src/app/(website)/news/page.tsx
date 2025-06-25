@@ -29,8 +29,6 @@ const NewsPage = () => {
     },
   });
 
-  console.log(stockNews)
-
   const firstNews = allNews[10];
   const rightSide = stockNews[1];
   const leftSide1 = stockNews[2];

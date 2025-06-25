@@ -144,8 +144,6 @@ const Page = () => {
 
     const newStatus = !video.publish
 
-    console.log(newStatus)
-
     try {
       await publishMutation.mutateAsync({
         videoId: video._id,

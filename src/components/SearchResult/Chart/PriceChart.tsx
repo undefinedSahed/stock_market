@@ -25,7 +25,6 @@ const PriceChart = () => {
 
   const axiosInstance = useAxios();
   const searchParams = useSearchParams();
-  // console.log(searchParams.q)
   const query = searchParams.get("q");
 
   const { data: priceData } = useQuery({

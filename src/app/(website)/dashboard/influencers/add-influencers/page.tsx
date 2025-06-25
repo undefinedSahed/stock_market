@@ -128,7 +128,6 @@ const Page = () => {
       // Append image file if selected
       if (selectedFile) {
         formData.append("imageLink", selectedFile);
-        console.log(selectedFile)
       }
 
       await mutateAsync(formData)

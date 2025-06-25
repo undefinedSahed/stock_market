@@ -10,8 +10,6 @@ export default function DividendDataCard() {
 
   const stockName = params.stockName as string;
 
-  console.log(stockName)
-
   const { data: cardData } = useQuery({
     queryKey: ["devident-card-data"],
     queryFn: async () => {

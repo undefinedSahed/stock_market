@@ -46,8 +46,6 @@ interface SidebarItem {
 export function OverviewSidebar() {
   const pathname = usePathname();
 
-  console.log(pathname);
-
   const params = useParams();
 
   const stockName = params.stockName as string;

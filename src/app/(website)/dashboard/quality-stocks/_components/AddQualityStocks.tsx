@@ -71,8 +71,6 @@ const AddQualityStocks = () => {
     staleTime: 30000,
   });
 
-  console.log(searchData);
-
   // Handle click outside to close dropdown
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {

@@ -9,9 +9,15 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import { useSearchParams } from "next/navigation";
+import Link from "next/link";
 
 const EarningChart = () => {
   const [activeTab, setActiveTab] = useState("Results");
+
+  const params = useSearchParams();
+
+  const stock = params.get('q')
 
   return (
     <div>
@@ -105,37 +111,30 @@ const EarningChart = () => {
               height={20}
               width={20}
             />
-            AI Summary{" "}
+            Slides{" "}
             <span className="bg-[#eaf6ec] px-3 rounded-sm text-green-500">
               Pro
             </span>
           </button>
 
           <button className="w-full bg-[#cccccc] py-3 flex items-center justify-center gap-2 rounded-3xl text-green-600">
-            <Image
-              src={"/images/report.png"}
-              alt="star img"
-              height={20}
-              width={20}
-            />
-            AI Summary{" "}
-            <span className="bg-[#eaf6ec] px-3 rounded-sm text-green-500">
-              Pro
-            </span>
+             <Link href={`tree?q=${stock}`}>
+            <button className="w-full bg-[#cccccc] py-3 flex items-center justify-center gap-2 rounded-3xl text-green-600">
+              <Image
+                src={"/images/transcript.png"}
+                alt="star img"
+                height={20}
+                width={20}
+              />
+              Tree{" "}
+              <span className="bg-[#eaf6ec] px-3 rounded-sm text-green-500">
+                Pro
+              </span>
+            </button>
+          </Link>
           </button>
 
-          <button className="w-full bg-[#cccccc] py-3 flex items-center justify-center gap-2 rounded-3xl text-green-600">
-            <Image
-              src={"/images/transcript.png"}
-              alt="star img"
-              height={20}
-              width={20}
-            />
-            AI Summary{" "}
-            <span className="bg-[#eaf6ec] px-3 rounded-sm text-green-500">
-              Pro
-            </span>
-          </button>
+         
         </div>
       </div>
 

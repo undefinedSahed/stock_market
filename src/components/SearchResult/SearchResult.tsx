@@ -405,7 +405,7 @@ const SearchResult = () => {
                   className="text-xs font-bold"
                   fill={"#03AC13"}
                 >
-                  {Math.abs(percentDiff)}%
+                  {Math.abs(percentDiff).toFixed(2)}%
                 </text>
                 <text
                   x="524"

@@ -90,8 +90,6 @@ export default function StockSearchSection() {
   const handleStockSelect = (stock: StockResult) => {
     setSearchQuery(stock.symbol);
     setShowResults(false);
-    // Add your navigation logic here
-    console.log("Selected stock:", stock);
   };
 
   return (
