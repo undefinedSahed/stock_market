@@ -38,13 +38,13 @@ export default function StockList({ onSelectStock, selectedStock }: StockListPro
     });
 
     const { mutate: getOverview, data: overviewData } = useMutation({
-        mutationFn: async (holdings: { symbol: string; shares: number }[]) => {
+        mutationFn: async () => {
             const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/portfolio/overview`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
                 },
-                body: JSON.stringify({ holdings }),
+                body: JSON.stringify({ id: selectedPortfolioId }),
             });
 
             if (!res.ok) {
@@ -55,20 +55,15 @@ export default function StockList({ onSelectStock, selectedStock }: StockListPro
         },
     });
 
-    // Trigger overview when portfolioData is ready
     useEffect(() => {
-        if (portfolioData && portfolioData.stocks && portfolioData.stocks.length > 0) {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const holdings = portfolioData.stocks.map((stock: any) => ({
-                symbol: stock.symbol,
-                shares: stock.quantity,
-            }));
-            getOverview(holdings);
-
-            // Removed the onInitialStockLoaded call from here.
-            // The initial selection is now handled by ChartPage.
+        if (selectedPortfolioId) {
+            getOverview();
         }
-    }, [portfolioData, getOverview]);
+    }, [selectedPortfolioId, getOverview]);
+
+
+
+    console.log(overviewData)
 
 
     return (

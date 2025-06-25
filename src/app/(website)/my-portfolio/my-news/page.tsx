@@ -1,7 +1,7 @@
-import MurakkabsNews from '@/components/Portfolio/my-news/murakkabs-news'
 import NewsList from '@/components/Portfolio/my-news/news-list'
 import { Plus } from 'lucide-react'
 import React from 'react'
+import OlivesNews from '@/components/Portfolio/my-news/olives-news'
 
 export default function page() {
     return (
@@ -20,7 +20,7 @@ export default function page() {
                     <NewsList />
                 </div>
                 <div className="lg:col-span-4">
-                    <MurakkabsNews />
+                    <OlivesNews />
                 </div>
             </div>
         </div>

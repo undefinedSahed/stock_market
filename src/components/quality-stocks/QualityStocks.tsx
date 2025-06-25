@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 "use client";
 
 import { useState, useMemo } from "react";
@@ -9,7 +10,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import useAxios from "@/hooks/useAxios";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import {
   useReactTable,
   getCoreRowModel,
@@ -21,6 +22,8 @@ import {
   type Column,
 } from "@tanstack/react-table";
 import Link from "next/link";
+import { IoIosNotificationsOutline } from "react-icons/io";
+import { toast } from "sonner";
 
 type Stock = {
   symbol: string;
@@ -59,23 +62,47 @@ export default function StockTable() {
     },
   });
 
+  const { mutateAsync } = useMutation({
+    mutationFn: async (payload: Stock) => {
+      const res = await axiosInstance.post("/protfolio/watchlist/add", {
+        symbol: payload?.symbol,
+      });
+      return res.data;
+    },
+    onSuccess: () => {
+      toast.success("Stock added in watchlist!");
+    },
+    onError: () => {
+      toast.error("Already added in watchlist");
+    },
+  });
+
+  const handleWatchlist = async (rowData: Stock) => {
+    await mutateAsync(rowData);
+  };
+
+  console.log(qualityStock);
+
   const columns = useMemo(
     () => [
       columnHelper.accessor("symbol", {
         header: "Company",
         cell: (info) => (
           <div>
-            <Link href={`/search-result?q=${info.getValue()}`} className="flex items-center">
-              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full">
+            <Link
+              href={`/search-result?q=${info.getValue()}`}
+              className="flex items-center gap-2"
+            >
+              <div>
                 <Image
-                  src={info.row.original.logo || "/placeholder.svg"}
+                  src={info.row.original.logo}
                   alt="logo"
                   width={1000}
                   height={1000}
-                  className="h-8 w-8"
+                  className="h-8 w-8 rounded-full"
                 />
               </div>
-              <span className="ml-2 text-xs sm:text-sm font-medium hidden sm:block">
+              <span className="text-xs sm:text-sm font-medium hidden sm:block">
                 {info.getValue()}
               </span>
             </Link>
@@ -230,10 +257,11 @@ export default function StockTable() {
         header: "Month %",
         cell: (info) => (
           <span
-            className={`font-medium ${info.getValue() && info.getValue().includes("-")
-              ? "text-red-500"
-              : "text-green-500"
-              }`}
+            className={`font-medium ${
+              info.getValue() && info.getValue().includes("-")
+                ? "text-red-500"
+                : "text-green-500"
+            }`}
           >
             {info.getValue() || "0.00%"}
           </span>
@@ -253,6 +281,21 @@ export default function StockTable() {
         header: "Market Cap",
         cell: (info) => info.getValue() || "N/A",
         enableSorting: true,
+      }),
+      columnHelper.display({
+        id: "action",
+        header: "Action",
+        cell: (info) => {
+          const rowData = info.row.original;
+          return (
+            <button
+              onClick={() => handleWatchlist(rowData)}
+              className="text-2xl flex justify-center cursor-pointer"
+            >
+              <IoIosNotificationsOutline />
+            </button>
+          );
+        },
       }),
     ],
     []
@@ -322,14 +365,15 @@ export default function StockTable() {
                 {headerGroup.headers.map((header) => (
                   <th
                     key={header.id}
-                    className="px-2 sm:px-4 py-3 text-center text-xs sm:text-sm font-medium text-gray-700"
+                    className="px-2 sm:px-2 py-3 text-center text-xs sm:text-sm font-medium text-gray-700"
                   >
                     {header.isPlaceholder ? null : (
                       <div
-                        className={`flex items-center justify-center gap-2 ${header.column.getCanSort()
-                          ? "cursor-pointer select-none"
-                          : ""
-                          }`}
+                        className={`flex items-center justify-center gap-2 ${
+                          header.column.getCanSort()
+                            ? "cursor-pointer select-none"
+                            : ""
+                        }`}
                         onClick={header.column.getToggleSortingHandler()}
                       >
                         {flexRender(
@@ -387,17 +431,18 @@ export default function StockTable() {
             -
             {Math.min(
               (table.getState().pagination.pageIndex + 1) *
-              table.getState().pagination.pageSize,
+                table.getState().pagination.pageSize,
               table.getFilteredRowModel().rows.length
             )}{" "}
             of {table.getFilteredRowModel().rows.length} stocks
           </div>
           <div className="flex items-center space-x-1 sm:space-x-2">
             <button
-              className={`flex h-7 sm:h-8 w-7 sm:w-8 items-center justify-center rounded-md border border-gray-200 text-gray-600 ${!table.getCanPreviousPage()
-                ? "opacity-50 cursor-not-allowed"
-                : ""
-                }`}
+              className={`flex h-7 sm:h-8 w-7 sm:w-8 items-center justify-center rounded-md border border-gray-200 text-gray-600 ${
+                !table.getCanPreviousPage()
+                  ? "opacity-50 cursor-not-allowed"
+                  : ""
+              }`}
               onClick={() => table.previousPage()}
               disabled={!table.getCanPreviousPage()}
             >
@@ -429,10 +474,11 @@ export default function StockTable() {
                 return (
                   <button
                     key={page}
-                    className={`flex h-7 sm:h-8 w-7 sm:w-8 items-center justify-center rounded-md text-xs sm:text-sm ${currentPage === page
-                      ? "bg-green-600 text-white"
-                      : "border border-gray-200 text-gray-600"
-                      }`}
+                    className={`flex h-7 sm:h-8 w-7 sm:w-8 items-center justify-center rounded-md text-xs sm:text-sm ${
+                      currentPage === page
+                        ? "bg-green-600 text-white"
+                        : "border border-gray-200 text-gray-600"
+                    }`}
                     onClick={() => table.setPageIndex(page - 1)}
                   >
                     {page}
@@ -442,8 +488,9 @@ export default function StockTable() {
             )}
 
             <button
-              className={`flex h-7 sm:h-8 w-7 sm:w-8 items-center justify-center rounded-md border border-gray-200 text-gray-600 ${!table.getCanNextPage() ? "opacity-50 cursor-not-allowed" : ""
-                }`}
+              className={`flex h-7 sm:h-8 w-7 sm:w-8 items-center justify-center rounded-md border border-gray-200 text-gray-600 ${
+                !table.getCanNextPage() ? "opacity-50 cursor-not-allowed" : ""
+              }`}
               onClick={() => table.nextPage()}
               disabled={!table.getCanNextPage()}
             >

@@ -13,7 +13,7 @@ import {
     DialogTitle,
     DialogTrigger,
 } from "@/components/ui/dialog"
-import { Pencil, Mail, Phone, Lock } from "lucide-react"
+import { Pencil, Mail, Lock } from "lucide-react"
 import { BiUser } from "react-icons/bi"
 
 import SubscriptionCard from "./subscription-card"
@@ -27,7 +27,6 @@ interface ProfileData {
     fullName: string
     email: string
     imageLink?: string
-    phoneNumber?: string
     address?: string
 }
 
@@ -51,7 +50,6 @@ export default function PersonalDetailsCard() {
         userName: session?.user?.name || "",
         fullName: "",
         email: "",
-        phoneNumber: "",
         address: "",
         password: "••••••",
     })
@@ -69,7 +67,6 @@ export default function PersonalDetailsCard() {
                 userName: session?.user?.name || "",
                 fullName: user.fullName || "",
                 email: user.email || "",
-                phoneNumber: user.phoneNumber || "",
                 address: user.address || "",
                 password: "••••••",
             })
@@ -90,7 +87,6 @@ export default function PersonalDetailsCard() {
                     fullName: profileData.fullName,
                     email: profileData.email,
                     imageLink: profileData.imageLink || "",
-                    phoneNumber: profileData.phoneNumber || "",
                     address: profileData.address || "",
                 }),
             })
@@ -235,40 +231,6 @@ export default function PersonalDetailsCard() {
                             </div>
                         </div>
 
-                        {/* Phone */}
-                        <div className="flex items-center space-x-3 bg-[#F9FAFB] px-4 py-3 rounded-md">
-                            <Phone className="h-7 w-7 text-[#737373]" />
-                            <div className="flex-1">
-                                <p className="text-xs text-[#737373]">Phone Number</p>
-                                {editingField === "phoneNumber" ? (
-                                    <div className="flex space-x-2">
-                                        <Input
-                                            value={tempValue}
-                                            onChange={(e) => setTempValue(e.target.value)}
-                                            className="flex-1 text-sm font-medium text-[#000000]"
-                                            type="tel"
-                                        />
-                                        <Button size="sm" onClick={() => handleSave("phoneNumber")}>
-                                            Save
-                                        </Button>
-                                        <Button size="sm" variant="outline" onClick={handleCancel}>
-                                            Cancel
-                                        </Button>
-                                    </div>
-                                ) : (
-                                    <div className="flex items-center justify-between">
-                                        <p className="text-sm font-medium">{userData?.phoneNumber}</p>
-                                        <Button
-                                            variant="ghost"
-                                            size="icon"
-                                            onClick={() => handleEdit("phoneNumber", userData?.phoneNumber)}
-                                        >
-                                            <Pencil className="h-4 w-4" />
-                                        </Button>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
 
                         {/* Password */}
                         <div className="flex items-center space-x-3 bg-[#F9FAFB] px-4 py-3 rounded-md">

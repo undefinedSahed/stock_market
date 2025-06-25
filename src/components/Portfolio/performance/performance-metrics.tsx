@@ -14,7 +14,8 @@ export function PerformanceMetrics({
     profitableTransactions,
     totalTransactions,
 }: PerformanceMetricsProps) {
-    const isNegativeReturn = averageReturn < 0
+    const isNegativeReturn = averageReturn <= 0
+    const isNegativeSuccessRate = successRate <= 0
 
     return (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4 px-2 pb-2">
@@ -33,16 +34,11 @@ export function PerformanceMetrics({
                     </TooltipProvider>
                 </div>
 
-                <div className="flex justify-center mb-6">
-                    <div className="relative w-24 h-24 md:w-32 md:h-32">
-                        {/* Circle background */}
-                        <div className="absolute inset-0 rounded-full border-4 border-gray-100"></div>
-
-                        {/* Success rate text */}
-                        <div className="absolute inset-0 flex items-center justify-center">
-                            <span className="text-2xl md:text-3xl font-bold text-red-500">{successRate}%</span>
-                        </div>
-                    </div>
+                <div className="flex justify-center items-center h-24 md:h-32 mb-6">
+                    <span className={`text-3xl md:text-4xl font-bold ${isNegativeSuccessRate ? "text-red-500" : "text-green-500"}`}>
+                        {isNegativeSuccessRate ? "" : "+"}
+                        {successRate}
+                    </span>
                 </div>
 
                 <p className="text-xs text-center mt-2 text-gray-500">
@@ -68,7 +64,7 @@ export function PerformanceMetrics({
                 <div className="flex justify-center items-center h-24 md:h-32 mb-6">
                     <span className={`text-3xl md:text-4xl font-bold ${isNegativeReturn ? "text-red-500" : "text-green-500"}`}>
                         {isNegativeReturn ? "" : "+"}
-                        {averageReturn.toFixed(2)}%
+                        {averageReturn}%
                     </span>
                 </div>
 

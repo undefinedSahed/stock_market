@@ -1,32 +1,45 @@
+"use client"
+
 import React from 'react'
 import RecentActivityTable from './recent-activity-table'
+import { usePortfolio } from '../portfolioContext';
+import { useQuery } from '@tanstack/react-query';
 
 export default function RecentActivity() {
 
+    const { selectedPortfolioId } = usePortfolio()
+
+    const { data: performaceData } = useQuery({
+        queryKey: ['portfolioPerformance'],
+        queryFn: async () => {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/get-performance/${selectedPortfolioId}`)
+            return response.json()
+        },
+        enabled: !!selectedPortfolioId
+    })
+
     const recentActivity = {
-        oneMonthReturn: -3.2,
-        sixMonthReturn: 3.2,
-        twelveMonthReturn: -2.3,
-        ytdReturn: 4.0,
-        totalReturn: -3.0,
+        oneMonthReturn: performaceData?.recentActivity?.oneMonth,
+        sixMonthReturn: performaceData?.recentActivity?.sixMonth,
+        twelveMonthReturn: performaceData?.recentActivity?.twelveMonth,
+        ytdReturn: performaceData?.recentActivity?.ytd,
+        totalReturn: performaceData?.recentActivity?.total,
     }
 
-
     const portfolioDetails = {
-        activeSince: "Mar 20, 2025",
-        riskProfile: "medium",
-        twelveMonthReturn: null, // Or you could use a number like 0.055 for 5.5%
-        ytdReturn: -3.2,
-        totalReturn: -0.032
-    };
+        activeSince: performaceData?.overview?.activeSince,
+        riskProfile: performaceData?.overview?.riskProfile,
+        twelveMonthReturn: performaceData?.overview?.twelveMonth ?? null,
+        ytdReturn: performaceData?.overview?.YTDReturn,
+        totalReturn: performaceData?.overview?.totalReturn
+    }
 
     const mostProfitableTrade = {
-        asset: "Apple (AAPL)",
-        opened: "Mar 20, 2025",
+        asset: performaceData?.mostProfitableTrade?.symbol,
+        opened: performaceData?.mostProfitableTrade?.openDate,
         closed: null,
-        gain: -3.2
-    };
-
+        gain: performaceData?.mostProfitableTrade?.gain
+    }
 
 
     return (
@@ -103,9 +116,9 @@ export default function RecentActivity() {
                             <div className="flex justify-between otems-center text-sm">
                                 <p>Risk Profile</p>
                                 <span className="text-xs flex items-center">
-                                    <span className={`${portfolioDetails.riskProfile === 'low' ? 'text-green-600' : ''}`}>Low</span>/
-                                    <span className={`${portfolioDetails.riskProfile === 'medium' ? 'text-[#E6C200]' : ''}`}>Medium </span>/
-                                    <span className={`${portfolioDetails.riskProfile === 'high' ? 'text-red-600' : ''}`}>High</span>
+                                    <span className={`${portfolioDetails.riskProfile === 'Low' ? 'text-green-600' : ''}`}>Low</span>/
+                                    <span className={`${portfolioDetails.riskProfile === 'Medium' ? 'text-[#E6C200]' : ''}`}>Medium </span>/
+                                    <span className={`${portfolioDetails.riskProfile === 'High' ? 'text-red-600' : ''}`}>High</span>
                                 </span>
                             </div>
                         </li>
@@ -159,7 +172,11 @@ export default function RecentActivity() {
                             <div className="flex justify-between otems-center text-sm">
                                 <p>Opened</p>
                                 <span className="text-xs">
-                                    {mostProfitableTrade.opened}
+                                    {new Date(mostProfitableTrade.opened).toLocaleDateString("en-US", {
+                                        year: "numeric",
+                                        month: "short",
+                                        day: "numeric",
+                                    })}
                                 </span>
                             </div>
                         </li>

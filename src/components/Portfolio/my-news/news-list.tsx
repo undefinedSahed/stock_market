@@ -14,139 +14,67 @@ import { Input } from '@/components/ui/input';
 import { LuSearch } from "react-icons/lu";
 import { useSession } from 'next-auth/react';
 import { usePortfolio } from '../portfolioContext';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation } from '@tanstack/react-query';
+import Link from 'next/link';
 
+
+interface News {
+    datetime: number,
+    symbol: string,
+    headline: string,
+    url: string,
+    id: number
+}
 
 
 export default function NewsList() {
     const { data: session } = useSession();
     const { selectedPortfolioId } = usePortfolio();
 
-    const isQueryEnabled = !!session?.user?.accessToken && !!selectedPortfolioId;
-
-    const {
-        data: portfolioData
-    } = useQuery({
-        queryKey: ["portfolio", selectedPortfolioId],
-        queryFn: async () => {
-            const res = await fetch(
-                `${process.env.NEXT_PUBLIC_API_URL}/portfolio/get/${selectedPortfolioId}`,
-                {
-                    headers: {
-                        "Content-Type": "application/json",
-                        Authorization: `Bearer ${session?.user?.accessToken}`,
-                    },
-                }
-            );
-            const data = await res.json();
-            return data;
-        },
-        enabled: isQueryEnabled,
-    });
-
 
     const { mutate: getMyNews, data: myNews } = useMutation({
-        mutationFn: async (symbols: string[]) => {
+        mutationFn: async () => {
             const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/news/get-protfolio-news`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
                     Authorization: `Bearer ${session?.user?.accessToken}`,
                 },
-                body: JSON.stringify({ symbols }),
+                body: JSON.stringify({ protfolioId: selectedPortfolioId }),
             });
             const data = await res.json();
             return data;
         },
     })
 
-    console.log(myNews)
-
     useEffect(() => {
-        if (portfolioData && portfolioData.stocks.length > 0) {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const symbols = portfolioData.stocks.map((stock: any) => stock.symbol);
-            getMyNews(symbols);
+        if (selectedPortfolioId) {
+            getMyNews()
         }
-    }, [portfolioData, getMyNews]);
+    }, [selectedPortfolioId, getMyNews])
 
-    const dummyData = [
-        {
-            date: '2d ago',
-            ticker: 'AAPL',
-            article: 'Microsoft Stock (MSFT) Narrowly Avoids Eight-Week Losing Streak',
-        },
-        {
-            date: '2d ago',
-            ticker: 'AAPL',
-            article: 'Microsoft Stock (MSFT) Narrowly Avoids Eight-Week Losing Streak',
-        },
-        {
-            date: '3d ago',
-            ticker: 'AAPL',
-            article: 'Microsoft Stock (MSFT) Narrowly Avoids Eight-Week Losing Streak',
-        },
-        {
-            date: '4d ago',
-            ticker: 'AAPL',
-            article: 'Microsoft Stock (MSFT) Narrowly Avoids Eight-Week Losing Streak',
-        },
-        {
-            date: '4d ago',
-            ticker: 'AAPL',
-            article: 'Microsoft Stock (MSFT) Narrowly Avoids Eight-Week Losing Streak',
-        },
-        {
-            date: '5d ago',
-            ticker: 'AAPL',
-            article: 'Microsoft Stock (MSFT) Narrowly Avoids Eight-Week Losing Streak',
-        },
-        {
-            date: '5d ago',
-            ticker: 'AAPL',
-            article: 'Microsoft Stock (MSFT) Narrowly Avoids Eight-Week Losing Streak',
-        },
-        {
-            date: '5d ago',
-            ticker: 'AAPL',
-            article: 'Microsoft Stock (MSFT) Narrowly Avoids Eight-Week Losing Streak',
-        },
-        {
-            date: '5d ago',
-            ticker: 'AAPL',
-            article: 'Microsoft Stock (MSFT) Narrowly Avoids Eight-Week Losing Streak',
-        },
-        {
-            date: '5d ago',
-            ticker: 'AAPL',
-            article: 'Microsoft Stock (MSFT) Narrowly Avoids Eight-Week Losing Streak',
-        },
-        {
-            date: '5d ago',
-            ticker: 'AAPL',
-            article: 'Microsoft Stock (MSFT) Narrowly Avoids Eight-Week Losing Streak',
-        },
-        {
-            date: '5d ago',
-            ticker: 'AAPL',
-            article: 'Microsoft Stock (MSFT) Narrowly Avoids Eight-Week Losing Streak',
-        },
-        {
-            date: '5d ago',
-            ticker: 'AAPL',
-            article: 'Microsoft Stock (MSFT) Narrowly Avoids Eight-Week Losing Streak',
-        },
-        {
-            date: '5d ago',
-            ticker: 'AAPL',
-            article: 'Microsoft Stock (MSFT) Narrowly Avoids Eight-Week Losing Streak',
-        },
-        {
-            date: '5d ago',
-            ticker: 'AAPL',
-            article: 'Microsoft Stock (MSFT) Narrowly Avoids Eight-Week Losing Streak',
-        },
-    ];
+    function shortTimeAgo(unixTimestamp: number): string {
+        const seconds = Math.floor((Date.now() - unixTimestamp * 1000) / 1000);
+
+        const units = [
+            { label: "y", seconds: 31536000 },
+            { label: "mo", seconds: 2592000 },
+            { label: "w", seconds: 604800 },
+            { label: "d", seconds: 86400 },
+            { label: "h", seconds: 3600 },
+            { label: "m", seconds: 60 },
+            { label: "s", seconds: 1 },
+        ];
+
+        for (const unit of units) {
+            const value = Math.floor(seconds / unit.seconds);
+            if (value >= 1) {
+                return `${value}${unit.label} ago`;
+            }
+        }
+
+        return "just now";
+    }
 
     return (
         <div className='p-2 shadow-[0px_0px_8px_0px_#00000029]'>
@@ -162,17 +90,21 @@ export default function NewsList() {
             <Table>
                 <TableHeader className='[&_tr]:border-b-0'>
                     <TableRow className='text-xs'>
-                        <TableHead className="w-[100px]">Date</TableHead>
-                        <TableHead>Ticker</TableHead>
-                        <TableHead>Article</TableHead>
+                        <TableHead className="md:w-[100px] w-12 p-0 md:p-2">Date</TableHead>
+                        <TableHead className='text-start p-0 md:p-2'>Ticker</TableHead>
+                        <TableHead className='p-0'>Article</TableHead>
                     </TableRow>
                 </TableHeader>
-                <TableBody className='text-xs'>
-                    {dummyData?.map((data, index) => (
-                        <TableRow key={index} className='border-b-0'>
-                            <TableCell className="font-medium">{data.date}</TableCell>
-                            <TableCell>{data.ticker}</TableCell>
-                            <TableCell>{data.article}</TableCell>
+                <TableBody className='md:text-sm text-xs'>
+                    {myNews?.map((data: News) => (
+                        <TableRow key={data.id} className='border-b-0'>
+                            <TableCell className="font-medium text-start p-0 md:p-2">{shortTimeAgo(data.datetime)}</TableCell>
+                            <TableCell className='text-start md:w-20 w-12 p-0 md:p-2'>{data.symbol}</TableCell>
+                            <TableCell className='text-start p-0 pl-3'>
+                                <Link href={data.url} target='_blank'>
+                                    {data.headline}
+                                </Link>
+                            </TableCell>
                         </TableRow>
                     ))}
                 </TableBody>

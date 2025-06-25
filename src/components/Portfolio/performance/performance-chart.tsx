@@ -1,8 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
+import { usePortfolio } from "../portfolioContext";
+import { useQuery } from "@tanstack/react-query";
 
 interface PerformanceData {
   date: string;
@@ -17,59 +19,37 @@ export default function PerformanceDashboard() {
   const [showSP500, setShowSP500] = useState(true);
   const [showPortfolio, setShowPortfolio] = useState(true);
 
-  // Dummy data
-  const performanceData: PerformanceData[] = [
-    {
-      date: "Apr 2025",
-      murakkabAverage: -3.02,
-      murakkabAverageSecondary: -3.02,
-      sp500: 3.02,
-      myPortfolio: -3.02,
+  const { selectedPortfolioId } = usePortfolio();
+
+  const { data: performaceData } = useQuery({
+    queryKey: ['portfolioPerformance'],
+    queryFn: async () => {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/get-performance/${selectedPortfolioId}`);
+      return response.json();
     },
-    {
-      date: "Apr 2025",
-      murakkabAverage: -4.15,
-      murakkabAverageSecondary: -2.89,
-      sp500: 3.02,
-      myPortfolio: -3.02,
-    },
-    {
-      date: "Apr 2025",
-      murakkabAverage: -2.75,
-      murakkabAverageSecondary: -3.02,
-      sp500: 3.02,
-      myPortfolio: -3.02,
-    },
-    {
-      date: "Apr 2025",
-      murakkabAverage: -3.45,
-      murakkabAverageSecondary: -3.02,
-      sp500: 3.02,
-      myPortfolio: -3.02,
-    },
-    {
-      date: "Apr 2025",
-      murakkabAverage: -3.89,
-      murakkabAverageSecondary: 3.02,
-      sp500: -3.02,
-      myPortfolio: 3.02,
-    },
-    {
-      date: "Apr 2025",
-      murakkabAverage: 3.02,
-      murakkabAverageSecondary: 3.02,
-      sp500: 3.02,
-      myPortfolio: 3.02,
-    },
-  ];
+    enabled: !!selectedPortfolioId,
+  });
+
+  const chartData = performaceData?.returnsComparison;
+
+  const performanceData: PerformanceData[] = useMemo(() => {
+    if (!chartData) return [];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return chartData.map((item: any) => ({
+      date: item.month,
+      murakkabAverage: item.mudarabahAverage,
+      murakkabAverageSecondary: item.mudarabahAverage,
+      sp500: item.sp500,
+      myPortfolio: item.portfolio,
+    }));
+  }, [chartData]);
 
   const maxValue = 26.01;
   const minValue = -26.01;
 
-  // Function to calculate bar height based on percentage
   const getBarHeight = (value: number) => {
     const percentage = (Math.abs(value) / maxValue) * 100;
-    return Math.max(percentage, 5); // Minimum 5% height for visibility
+    return Math.min(Math.max(percentage, 5), 100);
   };
 
   return (
@@ -115,22 +95,7 @@ export default function PerformanceDashboard() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-        <div className="flex flex-col gap-2 mt-4 col-span-1">
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 bg-green-500 rounded-sm"></div>
-            <span className="text-sm">Olive Stock&apos;s Average</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 bg-yellow-400 rounded-sm"></div>
-            <span className="text-sm">S&P 500</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 bg-red-500 rounded-sm"></div>
-            <span className="text-sm">My Portfolio</span>
-          </div>
-        </div>
-
-        <div className="mb-8 col-span-4 overflow-x-scroll lg:overflow-auto">
+        <div className="mb-8 col-span-5 overflow-x-scroll lg:overflow-auto">
           <div className="flex justify-start mb-2">
             <span className="text-gray-700 font-medium">
               {maxValue.toFixed(2)}%
@@ -140,54 +105,76 @@ export default function PerformanceDashboard() {
           <div className="grid grid-cols-6 gap-2 mb-1 min-w-[600px]">
             {performanceData.map((data, index) => (
               <div key={index} className="flex flex-col items-center">
-                <div className="h-36 w-full bg-gray-100 relative flex flex-col justify-center items-center">
-                  <div className="absolute w-full h-[1px] bg-gray-300 top-1/2 transform -translate-y-1/2"></div>
-
-                  {showMurakkab && data.murakkabAverage > 0 && (
+                <div className="w-full bg-gray-100 flex flex-col h-48">
+                  {/* Top half for positive values */}
+                  <div className="flex-1 flex items-end justify-center gap-4 relative">
                     <div
-                      className="absolute bottom-1/2 w-6 bg-green-500 rounded-t-sm"
+                      className="w-7 bg-green-500 rounded-t-sm"
                       style={{
-                        height: `${getBarHeight(data.murakkabAverage)}%`,
+                        height:
+                          showMurakkab && data.murakkabAverage > 0
+                            ? `${getBarHeight(data.murakkabAverage)}%`
+                            : "0%",
+                        opacity: showMurakkab ? 1 : 0,
                       }}
-                    ></div>
-                  )}
-
-                  {showMurakkab && data.murakkabAverage < 0 && (
+                    />
                     <div
-                      className="absolute top-1/2 w-6 bg-green-500 rounded-b-sm"
+                      className="w-7 bg-yellow-400 rounded-t-sm"
                       style={{
-                        height: `${getBarHeight(data.murakkabAverage)}%`,
+                        height:
+                          showSP500 && data.sp500 > 0
+                            ? `${getBarHeight(data.sp500)}%`
+                            : "0%",
+                        opacity: showSP500 ? 1 : 0,
                       }}
-                    ></div>
-                  )}
-
-                  {showSP500 && data.sp500 > 0 && (
+                    />
                     <div
-                      className="absolute bottom-1/2 w-6 bg-yellow-400 rounded-t-sm -ml-16"
-                      style={{ height: `${getBarHeight(data.sp500)}%` }}
-                    ></div>
-                  )}
+                      className="w-7 bg-red-500 rounded-t-sm"
+                      style={{
+                        height:
+                          showPortfolio && data.myPortfolio > 0
+                            ? `${getBarHeight(data.myPortfolio)}%`
+                            : "0%",
+                        opacity: showPortfolio ? 1 : 0,
+                      }}
+                    />
+                  </div>
 
-                  {showSP500 && data.sp500 < 0 && (
-                    <div
-                      className="absolute top-1/2 w-6 bg-yellow-400 rounded-b-sm -ml-16"
-                      style={{ height: `${getBarHeight(data.sp500)}%` }}
-                    ></div>
-                  )}
+                  <div className="h-[1px] bg-gray-300 w-full" />
 
-                  {showPortfolio && data.myPortfolio > 0 && (
+                  {/* Bottom half for negative values */}
+                  <div className="flex-1 flex items-start justify-center gap-4 relative">
                     <div
-                      className="absolute bottom-1/2 w-6 bg-red-500 rounded-t-sm ml-16"
-                      style={{ height: `${getBarHeight(data.myPortfolio)}%` }}
-                    ></div>
-                  )}
-
-                  {showPortfolio && data.myPortfolio < 0 && (
+                      className="w-7 bg-green-500 rounded-b-sm"
+                      style={{
+                        height:
+                          showMurakkab && data.murakkabAverage < 0
+                            ? `${getBarHeight(data.murakkabAverage)}%`
+                            : "0%",
+                        opacity: showMurakkab ? 1 : 0,
+                      }}
+                    />
                     <div
-                      className="absolute top-1/2 w-6 bg-red-500 rounded-b-sm ml-16"
-                      style={{ height: `${getBarHeight(data.myPortfolio)}%` }}
-                    ></div>
-                  )}
+                      className="w-7 bg-yellow-400 rounded-b-sm"
+                      style={{
+                        height:
+                          showSP500 && data.sp500 < 0
+                            ? `${getBarHeight(data.sp500)}%`
+                            : "0%",
+                        opacity: showSP500 ? 1 : 0,
+                      }}
+                    />
+                    <div
+                      className="w-7 bg-red-500 rounded-b-sm"
+                      style={{
+                        height:
+                          showPortfolio && data.myPortfolio < 0
+                            ? `${getBarHeight(data.myPortfolio)}%`
+                            : "0%",
+                        opacity: showPortfolio ? 1 : 0,
+                      }}
+                    />
+                  </div>
                 </div>
 
                 <div className="text-sm font-medium mt-1">{data.date}</div>
@@ -195,28 +182,14 @@ export default function PerformanceDashboard() {
                 <div className="flex flex-col gap-1 mt-2">
                   {showMurakkab && (
                     <div
-                      className={`flex items-center gap-1 ${
-                        data.murakkabAverage > 0
-                          ? "text-green-500"
-                          : "text-red-500"
-                      }`}
-                    >
-                      {data.murakkabAverage > 0 ? "▲" : "▼"}{" "}
-                      {Math.abs(data.murakkabAverage).toFixed(2)}%
-                    </div>
-                  )}
-
-                  {showMurakkab && (
-                    <div
-                      className={`flex items-center gap-1 ${
-                        data.murakkabAverageSecondary &&
+                      className={`flex items-center gap-1 ${data.murakkabAverageSecondary &&
                         data.murakkabAverageSecondary > 0
-                          ? "text-green-500"
-                          : "text-red-500"
-                      }`}
+                        ? "text-green-500"
+                        : "text-red-500"
+                        }`}
                     >
                       {data.murakkabAverageSecondary &&
-                      data.murakkabAverageSecondary > 0
+                        data.murakkabAverageSecondary > 0
                         ? "▲"
                         : "▼"}{" "}
                       {data.murakkabAverageSecondary
@@ -228,9 +201,8 @@ export default function PerformanceDashboard() {
 
                   {showSP500 && (
                     <div
-                      className={`flex items-center gap-1 ${
-                        data.sp500 > 0 ? "text-green-500" : "text-red-500"
-                      }`}
+                      className={`flex items-center gap-1 ${data.sp500 > 0 ? "text-green-500" : "text-red-500"
+                        }`}
                     >
                       {data.sp500 > 0 ? "▲" : "▼"}{" "}
                       {Math.abs(data.sp500).toFixed(2)}%
@@ -239,9 +211,10 @@ export default function PerformanceDashboard() {
 
                   {showPortfolio && (
                     <div
-                      className={`flex items-center gap-1 ${
-                        data.myPortfolio > 0 ? "text-green-500" : "text-red-500"
-                      }`}
+                      className={`flex items-center gap-1 ${data.myPortfolio > 0
+                        ? "text-green-500"
+                        : "text-red-500"
+                        }`}
                     >
                       {data.myPortfolio > 0 ? "▲" : "▼"}{" "}
                       {Math.abs(data.myPortfolio).toFixed(2)}%

@@ -1,4 +1,4 @@
-import BannerAds from '@/components/murakkabs_portfolio/BannerAds';
+import BannerAds from '@/components/olivestocks_portfolio/BannerAds';
 import { OverviewSidebar } from '@/components/overview/overview-sidebar';
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import type React from 'react';

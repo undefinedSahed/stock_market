@@ -161,7 +161,7 @@ export default function Home() {
             </div>
 
             <div className="flex text-center items-center justify-center mt-2 py-2 gap-2">
-              <div>Portfolio Cash:</div>
+              <div>Portfolio Cash: $</div>
               <div className="flex items-center gap-2">
                 <Input
                   type="number"

@@ -1,195 +1,233 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
+import { useParams } from "next/navigation";
+import { useQuery } from "@tanstack/react-query";
 import { ChevronRight } from "lucide-react";
+// Assuming these are separate components you have
 import FilterButtons from "./FilterButtons";
 import FinancialChart from "./chart/FinancialChart";
+import { AxiosInstance } from "axios"; // Import AxiosInstance type
+import useAxios from "@/hooks/useAxios";
 
-// Financial data for different time periods
-const financialData = {
-  annual: {
-    earnings: [
-      { year: "2019", revenue: 260, earnings: 55, profitMargin: 21.2 },
-      { year: "2021", revenue: 270, earnings: 60, profitMargin: 22.2 },
-      { year: "2022", revenue: 365, earnings: 90, profitMargin: 24.7 },
-      { year: "2023", revenue: 380, earnings: 100, profitMargin: 26.3 },
-      { year: "2024", revenue: 390, earnings: 95, profitMargin: 24.4 },
-    ],
-    debt: [
-      {
-        year: "2019",
-        assets: 260,
-        liabilities: 55,
-        debtRatio: 21.2,
-        revenue: 0,
-      },
-      {
-        year: "2021",
-        revenue: 365,
-        liabilities: 80,
-        debtRatio: 21.9,
-        assets: 0,
-      },
-      {
-        year: "2022",
-        assets: 270,
-        liabilities: 65,
-        debtRatio: 24.1,
-        revenue: 0,
-      },
-      {
-        year: "2023",
-        assets: 380,
-        liabilities: 100,
-        debtRatio: 26.3,
-        revenue: 0,
-      },
-      {
-        year: "2024",
-        assets: 390,
-        liabilities: 95,
-        debtRatio: 24.4,
-        revenue: 0,
-      },
-    ],
-  },
-  ttm: {
-    earnings: [
-      { year: "2019", revenue: 240, earnings: 50, profitMargin: 20.8 },
-      { year: "2021", revenue: 260, earnings: 55, profitMargin: 21.2 },
-      { year: "2022", revenue: 350, earnings: 85, profitMargin: 24.3 },
-      { year: "2023", revenue: 370, earnings: 95, profitMargin: 25.7 },
-      { year: "2024", revenue: 380, earnings: 90, profitMargin: 23.7 },
-    ],
-    debt: [
-      {
-        year: "2019",
-        assets: 250,
-        liabilities: 50,
-        debtRatio: 20.0,
-        revenue: 0,
-      },
-      {
-        year: "2021",
-        revenue: 355,
-        liabilities: 75,
-        debtRatio: 21.1,
-        assets: 0,
-      },
-      {
-        year: "2022",
-        assets: 260,
-        liabilities: 60,
-        debtRatio: 23.1,
-        revenue: 0,
-      },
-      {
-        year: "2023",
-        assets: 370,
-        liabilities: 95,
-        debtRatio: 25.7,
-        revenue: 0,
-      },
-      {
-        year: "2024",
-        assets: 380,
-        liabilities: 90,
-        debtRatio: 23.7,
-        revenue: 0,
-      },
-    ],
-  },
-  quarterly: {
-    earnings: [
-      { year: "Q1 2023", revenue: 90, earnings: 22, profitMargin: 24.4 },
-      { year: "Q2 2023", revenue: 95, earnings: 25, profitMargin: 26.3 },
-      { year: "Q3 2023", revenue: 97, earnings: 26, profitMargin: 26.8 },
-      { year: "Q4 2023", revenue: 98, earnings: 25, profitMargin: 25.5 },
-      { year: "Q1 2024", revenue: 100, earnings: 24, profitMargin: 24.0 },
-    ],
-    debt: [
-      { year: "Q1 2023", assets: 90, liabilities: 22, debtRatio: 24.4 },
-      { year: "Q2 2023", assets: 95, liabilities: 25, debtRatio: 26.3 },
-      { year: "Q3 2023", assets: 97, liabilities: 26, debtRatio: 26.8 },
-      { year: "Q4 2023", assets: 98, liabilities: 25, debtRatio: 25.5 },
-      { year: "Q1 2024", assets: 100, liabilities: 24, debtRatio: 24.0 },
-    ],
-  },
-};
+// --- Type Definitions for API Response ---
+interface FinancialDataApiResponse {
+  symbol: string;
+  dates: string[];
+  incomeStatement: Record<string, number[]>; // Values are numbers from API
+  balanceSheet: Record<string, number[]>;    // Values are numbers from API
+  cashFlow: Record<string, number[]>;        // Values are numbers from API
+}
+
+// --- Type Definitions for Chart Data ---
+interface FinancialChartDataPoint {
+  year: string;
+  // Earnings Chart specific keys
+  revenue: number;
+  earnings: number;
+  profitMargin: number;
+  // Debt Chart specific keys
+  assets: number;
+  liabilities: number;
+  debtRatio: number;
+  [key: string]: string | number;
+}
 
 export default function FinancialDashboard() {
-  const [filter, setFilter] = useState<"annual" | "ttm" | "quarterly">(
-    "annual"
-  );
+  const [filter, setFilter] = useState<"annual" | "ttm" | "quarterly">("annual");
+  const axiosInstance = useAxios() as AxiosInstance; // Cast to AxiosInstance
+  const params = useParams();
+
+  const stockName = params.stockName as string;
+
+  // --- API Data Fetching ---
+  const {
+    data: financialData,
+    isLoading,
+    isError,
+    error,
+  } = useQuery<FinancialDataApiResponse, Error>({
+    queryKey: ["financial-overview", stockName],
+    queryFn: async () => {
+      const res = await axiosInstance.get<FinancialDataApiResponse>(`/stocks/financial-overview/${stockName.toUpperCase()}`);
+      return res.data;
+    },
+    enabled: !!stockName,
+  });
+
+  // --- Helper to format numbers for chart display (optional, can be done in chart too) ---
+  const formatChartValue = (value: number | undefined): number => {
+    return value !== undefined ? value / 1_000_000_000 : 0; // Convert to Billions for display in chart
+  };
+
+  // --- Data Transformation for Charts ---
+  const { earningsChartData, debtChartData } = useMemo(() => {
+    if (!financialData) {
+      return { earningsChartData: [], debtChartData: [] };
+    }
+
+    const { dates, incomeStatement, balanceSheet } = financialData;
+
+    // Determine the slice of data based on the filter
+    let sliceLength = dates.length; // Default to all available dates
+
+    if (filter === "ttm" || filter === "quarterly") {
+      // For TTM/Quarterly, let's take the most recent 4 periods as an approximation
+      // Adjust this logic if your API provides true TTM/quarterly data
+      sliceLength = Math.min(4, dates.length); // Get up to last 4 periods
+    }
+
+    const slicedDates = dates.slice(0, sliceLength);
+
+    const earningsData: FinancialChartDataPoint[] = slicedDates.map((date, index) => {
+      const netSales = incomeStatement["Net sales"]?.[index] ?? 0;
+      const netIncome = incomeStatement["Net income"]?.[index] ?? 0;
+      const profitMargin = (netIncome !== undefined && netSales !== undefined && netSales !== 0)
+        ? (netIncome / netSales) * 100
+        : 0;
+
+      // Provide default values for debt-related fields
+      return {
+        year: date ?? "",
+        revenue: formatChartValue(netSales), // Convert to Billions
+        earnings: formatChartValue(netIncome), // Convert to Billions
+        profitMargin: profitMargin,
+        assets: 0,
+        liabilities: 0,
+        debtRatio: 0,
+      };
+    }).reverse(); // Reverse to show oldest to newest on chart
+
+    const debtData: FinancialChartDataPoint[] = slicedDates.map((date, index) => {
+      const totalAssets = balanceSheet["Total assets"]?.[index] ?? 0;
+      const totalLiabilities = balanceSheet["Total liabilities"]?.[index] ?? 0;
+      const debtRatio = (totalLiabilities !== undefined && totalAssets !== undefined && totalAssets !== 0)
+        ? (totalLiabilities / totalAssets) * 100
+        : 0;
+
+      return {
+        year: date ?? "",
+        revenue: 0,
+        earnings: 0,
+        profitMargin: 0,
+        assets: formatChartValue(totalAssets), // Convert to Billions
+        liabilities: formatChartValue(totalLiabilities), // Convert to Billions
+        debtRatio: debtRatio,
+      };
+    }).reverse(); // Reverse to show oldest to newest on chart
+
+    return { earningsChartData: earningsData, debtChartData: debtData };
+  }, [financialData, filter]); // Re-run memoization when financialData or filter changes
+
+  // --- Loading and Error States ---
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-64 bg-gray-50 rounded-lg m-4 animate-fadeIn">
+        <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-green-600"></div>
+        <p className="ml-5 text-lg font-medium text-gray-700">Loading financial chart data...</p>
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="text-center py-10 text-red-700 bg-red-50 border border-red-300 rounded-xl mx-4 my-8 animate-fadeIn">
+        <p className="font-bold text-xl mb-2">Oops! Error Fetching Chart Data</p>
+        <p className="text-lg">{error?.message || "An unexpected error occurred."}</p>
+        <p className="mt-4 text-sm text-red-600">Please verify the stock symbol or try again later.</p>
+      </div>
+    );
+  }
+
+  // Handle case where financialData might be null even after isLoading/isError checks
+  if (!financialData) {
+    return (
+      <div className="text-center py-10 text-gray-700 bg-gray-50 border border-gray-300 rounded-xl mx-4 my-8 animate-fadeIn">
+        <p className="font-bold text-xl mb-2">No Financial Data Available</p>
+        <p className="text-lg">No financial data found to display charts for {stockName ? stockName.toUpperCase() : "the selected stock"}.</p>
+        <p className="mt-4 text-sm text-gray-600">Please check the stock symbol or try again later.</p>
+      </div>
+    );
+  }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 mt-16 px-4">
       <FilterButtons activeFilter={filter} setFilter={setFilter} />
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Earnings Chart */}
         <div>
-          <div className="bg-white rounded-lg shadow-sm p-4 border border-gray-100">
-            <h2 className="text-xl font-semibold mb-4">
-              Apple Earnings and Revenue History
+          <div className="bg-white rounded-lg p-4 border border-gray-100">
+            <h2 className="text-xl font-semibold mb-4 text-gray-800">
+              {financialData.symbol} Earnings and Revenue History
             </h2>
-            <div className="flex justify-between mb-2">
-              <div className="text-sm font-medium">Earnings</div>
-              <div className="text-sm font-medium">Profit Margin</div>
+            <div className="flex justify-between mb-2 items-center">
+              <div className="text-sm font-medium text-gray-600">Revenue (B) & Earnings (B)</div>
+              <div className="text-sm font-medium text-gray-600">Profit Margin (%)</div>
             </div>
-            <FinancialChart
-              data={financialData[filter].earnings}
-              barKey1="revenue"
-              barKey2="earnings"
-              lineKey="profitMargin"
-              barColor1="#22c55e"
-              barColor2="#e5e7eb"
-              lineColor="#ef4444"
-              yAxisLabel="B"
-              percentageAxis={true}
-              legend={[
-                { key: "revenue", label: "Revenue", color: "#22c55e" },
-                { key: "earnings", label: "Earnings", color: "#e5e7eb" },
-                {
-                  key: "profitMargin",
-                  label: "Profit Margin",
-                  color: "#ef4444",
-                },
-              ]}
-            />
+            {earningsChartData.length > 0 ? (
+              <FinancialChart
+                data={earningsChartData}
+                barKey1="revenue"
+                barKey2="earnings"
+                lineKey="profitMargin"
+                barColor1="#22c55e" // Green
+                barColor2="#9ca3af" // Gray for earnings (less prominent)
+                lineColor="#ef4444" // Red for profit margin line
+                yAxisLabel="B"
+                percentageAxis={true}
+                legend={[
+                  { key: "revenue", label: "Revenue", color: "#22c55e" },
+                  { key: "earnings", label: "Earnings", color: "#9ca3af" },
+                  { key: "profitMargin", label: "Profit Margin", color: "#ef4444" },
+                ]}
+              />
+            ) : (
+              <div className="text-center py-12 text-gray-500">No earnings data available for charts.</div>
+            )}
             <div className="flex justify-end mt-4">
-              <a href="#" className="text-blue-500 text-sm flex items-center">
-                Income Statement <ChevronRight className="h-4 w-4" />
+              <a href="#" className="text-blue-600 text-sm flex items-center hover:underline">
+                View Income Statement <ChevronRight className="h-4 w-4 ml-1" />
               </a>
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-sm p-4 border border-gray-100">
-          <h2 className="text-xl font-semibold mb-4">Apple Debt to Assets</h2>
-          <div className="flex justify-between mb-2">
-            <div className="text-sm font-medium">Liabilities</div>
-            <div className="text-sm font-medium">Debt of Assets</div>
-          </div>
-          <FinancialChart
-            data={financialData[filter].debt}
-            barKey1="assets"
-            barKey2="liabilities"
-            lineKey="debtRatio"
-            barColor1="#3b82f6"
-            barColor2="#93c5fd"
-            lineColor="#ef4444"
-            yAxisLabel="B"
-            percentageAxis={true}
-            legend={[
-              { key: "assets", label: "Assets", color: "#3b82f6" },
-              { key: "liabilities", label: "Liabilities", color: "#93c5fd" },
-              { key: "debtRatio", label: "Debt of Assets", color: "#ef4444" },
-            ]}
-          />
-          <div className="flex justify-end mt-4">
-            <a href="#" className="text-blue-500 text-sm flex items-center">
-              Balance Sheet <ChevronRight className="h-4 w-4" />
-            </a>
+        {/* Debt Chart */}
+        <div>
+          <div className="bg-white rounded-lg p-4 border border-gray-100">
+            <h2 className="text-xl font-semibold mb-4 text-gray-800">
+              {financialData.symbol} Debt and Asset Overview
+            </h2>
+            <div className="flex justify-between mb-2 items-center">
+              <div className="text-sm font-medium text-gray-600">Assets (B) & Liabilities (B)</div>
+              <div className="text-sm font-medium text-gray-600">Debt to Assets (%)</div>
+            </div>
+            {debtChartData.length > 0 ? (
+              <FinancialChart
+                data={debtChartData}
+                barKey1="assets"
+                barKey2="liabilities"
+                lineKey="debtRatio"
+                barColor1="#3b82f6" // Blue
+                barColor2="#93c5fd" // Lighter Blue for liabilities
+                lineColor="#ef4444" // Red for debt ratio
+                yAxisLabel="B"
+                percentageAxis={true}
+                legend={[
+                  { key: "assets", label: "Assets", color: "#3b82f6" },
+                  { key: "liabilities", label: "Liabilities", color: "#93c5fd" },
+                  { key: "debtRatio", label: "Debt to Assets", color: "#ef4444" },
+                ]}
+              />
+            ) : (
+              <div className="text-center py-12 text-gray-500">No debt data available for charts.</div>
+            )}
+            <div className="flex justify-end mt-4">
+              <a href="#" className="text-blue-600 text-sm flex items-center hover:underline">
+                View Balance Sheet <ChevronRight className="h-4 w-4 ml-1" />
+              </a>
+            </div>
           </div>
         </div>
       </div>

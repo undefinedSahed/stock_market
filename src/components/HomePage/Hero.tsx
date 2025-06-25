@@ -91,7 +91,7 @@ export default function HeroSwiper() {
                 Register Now
               </Link>
               <Link
-                href="/explore"
+                href="/explore-plan"
                 className="inline-flex items-center justify-center rounded-md border border-green-500 bg-white px-8 py-3 text-base font-medium text-green-600 hover:bg-green-50 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
               >
                 See What We Offer
@@ -107,9 +107,8 @@ export default function HeroSwiper() {
                 {swiperImages.map((image, index) => (
                   <div
                     key={index}
-                    className={`absolute inset-0 h-full w-full transition-opacity duration-500 ${
-                      index === currentSlide ? "opacity-100" : "opacity-0"
-                    }`}
+                    className={`absolute inset-0 h-full w-full transition-opacity duration-500 ${index === currentSlide ? "opacity-100" : "opacity-0"
+                      }`}
                   >
                     <Image
                       src={image.src || "/placeholder.svg"}
@@ -128,11 +127,10 @@ export default function HeroSwiper() {
                         {swiperImages.map((_, i) => (
                           <span
                             key={i}
-                            className={`h-2 w-2 rounded-full ${
-                              i === currentSlide
-                                ? "bg-green-500"
-                                : "bg-white/50"
-                            }`}
+                            className={`h-2 w-2 rounded-full ${i === currentSlide
+                              ? "bg-green-500"
+                              : "bg-white/50"
+                              }`}
                           />
                         ))}
                       </div>

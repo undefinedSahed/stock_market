@@ -28,55 +28,22 @@ export default function ProfileInfo() {
     })
 
     const { mutate: getOverview, data: overviewData } = useMutation({
-        mutationFn: async (holdings: { symbol: string; shares: number }[]) => {
+        mutationFn: async () => {
             const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/portfolio/overview`, {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({ holdings }),
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ id: selectedPortfolioId }),
             });
-
-            if (!res.ok) {
-                throw new Error("Failed to fetch portfolio overview");
-            }
-
+            if (!res.ok) throw new Error("Failed to fetch portfolio overview");
             return res.json();
         },
     });
 
-
-    const { data: portfolioData } = useQuery({
-        queryKey: ["portfolio", selectedPortfolioId], // add selectedPortfolioId to the query key
-        queryFn: async () => {
-            // If selectedPortfolioId is undefined (initial load before a selection), prevent the fetch.
-            // The `enabled` prop below also handles this, but it's good to be explicit here too.
-            if (!selectedPortfolioId) {
-                return null;
-            }
-            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/portfolio/get/${selectedPortfolioId}`, {
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${session?.user?.accessToken}`,
-                },
-            });
-            const data = await res.json();
-            return data;
-        },
-        enabled: !!session?.user?.accessToken && !!selectedPortfolioId, // only run when both are available
-    });
-
-
     useEffect(() => {
-        if (portfolioData && portfolioData.stocks && portfolioData.stocks.length > 0) {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const holdings = portfolioData.stocks.map((stock: any) => ({
-                symbol: stock.symbol,
-                shares: stock.quantity,
-            }));
-            getOverview(holdings);
+        if (selectedPortfolioId) {
+            getOverview();
         }
-    }, [portfolioData, getOverview]);
+    }, [selectedPortfolioId, getOverview]);
 
 
     const dailyReturnPercent = overviewData?.dailyReturnPercent ?? 0;
@@ -119,7 +86,7 @@ export default function ProfileInfo() {
                 </div>
                 <div className="p-4 pr-12 bg-[#EAF6EC] rounded-xl text-[#28A745]">
                     <h3 className='text-xs pb-1'>Portfolio Value</h3>
-                    <h2 className='text-lg font-semibold pb-1'>${overviewData?.totalHoldings}</h2>
+                    <h2 className='text-lg font-semibold pb-1'>${overviewData?.totalValueWithCash}</h2>
                     <div className="flex gap-2 items-center">
                         <div className={`flex items-center ${isReturnPercentPositive ? "text-green-500" : "text-red-500"}`}>
                             {isReturnPercentPositive ? <FaCaretUp className="w-6 h-6 mr-1" /> : <FaCaretDown className="w-6 h-6 mr-1" />}

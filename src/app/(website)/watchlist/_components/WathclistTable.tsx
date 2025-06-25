@@ -6,10 +6,11 @@ import {
   ChevronLeft,
   ChevronUp,
   ChevronDown,
+  Trash,
 } from "lucide-react";
 import Image from "next/image";
 import useAxios from "@/hooks/useAxios";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import {
   useReactTable,
   getCoreRowModel,
@@ -21,6 +22,7 @@ import {
   type Column,
 } from "@tanstack/react-table";
 import Link from "next/link";
+import { toast } from "sonner";
 
 type Stock = {
   symbol: string;
@@ -45,19 +47,39 @@ type Stock = {
 
 const columnHelper = createColumnHelper<Stock>();
 
-export default function Portfolio() {
+export default function WatchlistTable() {
   const [sorting, setSorting] = useState<SortingState>([]);
 
   // API calling
   const axiosInstance = useAxios();
 
-  const { data: qualityStock } = useQuery({
-    queryKey: ["olive-stock"],
+  const { data: qualityStock, refetch } = useQuery({
+    queryKey: ["wathlist-stock"],
     queryFn: async () => {
-      const res = await axiosInstance("/stocks/olive-stock-protfolio");
-      return res.data;
+      const res = await axiosInstance("/protfolio/watchlist");
+      return res.data.data;
     },
   });
+
+  const { mutateAsync } = useMutation({
+    mutationFn: async (payload: Stock) => {
+      const res = await axiosInstance.post("/protfolio/watchlist/remove", {
+        symbol: payload?.symbol,
+      });
+      return res.data;
+    },
+    onSuccess: () => {
+      toast.success("Stock delete from watchlist!");
+      refetch();
+    },
+    onError: () => {
+      toast.error("failed to delete");
+    },
+  });
+
+  const handleWatchlist = async (rowData: Stock) => {
+    await mutateAsync(rowData);
+  };
 
   const columns = useMemo(
     () => [
@@ -67,18 +89,18 @@ export default function Portfolio() {
           <div>
             <Link
               href={`/search-result?q=${info.getValue()}`}
-              className="flex items-center"
+              className="flex items-center gap-2"
             >
-              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full">
+              <div>
                 <Image
                   src={info.row.original.logo || "/placeholder.svg"}
                   alt="logo"
                   width={1000}
                   height={1000}
-                  className="h-8 w-8"
+                  className="h-8 w-8 rounded-full"
                 />
               </div>
-              <span className="ml-2 text-xs sm:text-sm font-medium hidden sm:block">
+              <span className="text-xs sm:text-sm font-medium hidden sm:block">
                 {info.getValue()}
               </span>
             </Link>
@@ -258,11 +280,27 @@ export default function Portfolio() {
         cell: (info) => info.getValue() || "N/A",
         enableSorting: true,
       }),
+      columnHelper.display({
+        id: "action",
+        header: "Action",
+        cell: (info) => {
+          const rowData = info.row.original;
+          return (
+            <button
+              onClick={() => handleWatchlist(rowData)}
+              className="flex justify-center cursor-pointer"
+            >
+              <Trash className="text-sm"/>
+            </button>
+          );
+        },
+      }),
     ],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     []
   );
 
-  const data = useMemo(() => qualityStock?.OliveStocks || [], [qualityStock]);
+  const data = useMemo(() => qualityStock || [], [qualityStock]);
 
   const table = useReactTable({
     data,
@@ -286,7 +324,7 @@ export default function Portfolio() {
     return (
       <div className="bg-white rounded-lg shadow-lg p-2 sm:p-4 md:p-6 container mx-auto border mt-10">
         <h2 className="text-xl sm:text-2xl font-medium mb-4">
-          Olive Stocks Portfolio
+          Watchlist
         </h2>
         <div className="flex items-center justify-center py-8">
           <div className="text-gray-500">Loading stocks...</div>
@@ -330,7 +368,7 @@ export default function Portfolio() {
                 {headerGroup.headers.map((header) => (
                   <th
                     key={header.id}
-                    className="px-2 sm:px-4 py-3 text-center text-xs sm:text-sm font-medium text-gray-700"
+                    className="px-2 sm:px-2 py-3 text-center text-xs sm:text-sm font-medium text-gray-700"
                   >
                     {header.isPlaceholder ? null : (
                       <div

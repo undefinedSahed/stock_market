@@ -79,7 +79,7 @@ const MyPortfolio = () => {
 
 
   return (
-    <div className="w-full overflow-hidden">
+    <div className="w-[83vw] overflow-hidden">
       <StockTickerCarousel />
       <PortfolioPanels />
       <PortfolioTable />
