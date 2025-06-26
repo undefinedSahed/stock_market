@@ -58,7 +58,7 @@ export default function StockNews({ stockNews }: StockNewsProps) {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-8">
-        {stockNews.slice(0, 3).map((news) => (
+        {stockNews.slice(0, 9).map((news) => (
           <MarketNewsCard
             key={news?._id}
             image={news?.image}
@@ -73,12 +73,14 @@ export default function StockNews({ stockNews }: StockNewsProps) {
       </div>
 
       <div className="font-medium text-blue-500 text-xl mt-2 flex justify-end">
-        <button className="flex items-center gap-2 ">
-          <h1>More AAPL News</h1>
-          <h1>
-            <ChevronRight />
-          </h1>
-        </button>
+        <Link href={'/news'}>
+          <button className="flex items-center gap-2 ">
+            <h1>More News</h1>
+            <h1>
+              <ChevronRight />
+            </h1>
+          </button>
+        </Link>
       </div>
     </div>
   );

@@ -483,9 +483,10 @@ export default function FinancialOverview() {
               </div>
               <p className="text-sm text-gray-600 mt-6 leading-relaxed">
                 These indicative ratios are essential for a quick assessment of
-                a company&apos;s financial performance and valuation relative to its
-                peers. Please note that a full analysis would involve comparing
-                these figures against industry benchmarks and historical trends.
+                a company&apos;s financial performance and valuation relative to
+                its peers. Please note that a full analysis would involve
+                comparing these figures against industry benchmarks and
+                historical trends.
               </p>
             </div>
           )}

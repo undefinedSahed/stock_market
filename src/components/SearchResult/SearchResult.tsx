@@ -13,6 +13,7 @@ import { useQuery } from "@tanstack/react-query";
 import useAxios from "@/hooks/useAxios";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { Loader2 } from "lucide-react";
 
 const SearchResult = () => {
   const [isActive, setIsActive] = useState("price");
@@ -22,7 +23,7 @@ const SearchResult = () => {
 
   const axiosInstance = useAxios();
 
-  const { data: stockData = {} } = useQuery({
+  const { data: stockData = {}, isLoading } = useQuery({
     queryKey: ["stock-overview", query],
     queryFn: async () => {
       const res = await axiosInstance(
@@ -84,6 +85,13 @@ const SearchResult = () => {
   };
 
   const statusInfo = getStatusInfo();
+
+  if (isLoading)
+    return (
+      <div className="absolute inset-0 bg-white/80 flex items-center justify-center z-10">
+        <Loader2 className="h-12 w-12 animate-spin text-green-500" />
+      </div>
+    );
 
   return (
     <div className="container mx-auto px-4 py-6">

@@ -1,28 +1,31 @@
-"use client"
+"use client";
 
 import RecentNews from "@/components/overview/news";
 import { Button } from "@/components/ui/button";
-import { Check, ChevronUp } from "lucide-react";
+import { Check, ChevronUp, Loader2 } from "lucide-react";
 import StockNews from "./_components/StockNews";
-import NewsAndScore from "./_components/NewsAndScore";
-import MediaCoverageChart from "./_components/chart/MediaCoverageChart";
 import StockPremiumBanner from "@/components/Portfolio/chart/chart-bottom";
 import OverviewFAQ from "@/components/overview/overview-faq";
 import useAxios from "@/hooks/useAxios";
 import { useQuery } from "@tanstack/react-query";
 
 const Page = () => {
-
   const axiosInstance = useAxios();
 
-  const {data : allNews = []} = useQuery({
-    queryKey : ["overview-news"],
-    queryFn : async () => {
-      const res = await axiosInstance('/admin/news/market-news');
+  const { data: allNews = [], isLoading } = useQuery({
+    queryKey: ["overview-news"],
+    queryFn: async () => {
+      const res = await axiosInstance("/admin/news/market-news");
       return res.data.data;
-    }
-  })  
+    },
+  });
 
+  if (isLoading)
+    return (
+      <div className="absolute inset-0 bg-white/80 flex items-center justify-center z-10">
+        <Loader2 className="h-12 w-12 animate-spin text-green-500" />
+      </div>
+    );
 
   return (
     <div className="lg:w-[75vw]">
@@ -64,18 +67,17 @@ const Page = () => {
       {/* page layout */}
       <div className="flex flex-col lg:flex-row gap-8 mt-8">
         <div className="lg:w-[75%]">
-
           <div>
             <StockNews stockNews={allNews} />
           </div>
 
-          <div>
+          {/* <div>
             <NewsAndScore />
-          </div>
+          </div> */}
 
-          <div className="mt-10">
+          {/* <div className="mt-10">
             <MediaCoverageChart />
-          </div>
+          </div> */}
 
           <div className="mt-16">
             <OverviewFAQ />
@@ -84,7 +86,6 @@ const Page = () => {
           <div className="mt-16">
             <StockPremiumBanner />
           </div>
-
         </div>
 
         <div className="lg:w-[25%]">
