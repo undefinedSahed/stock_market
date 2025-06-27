@@ -3,8 +3,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import useAxios from "@/hooks/useAxios"
 import { useQuery } from "@tanstack/react-query"
-import { ArrowRight } from "lucide-react"
-import Link from "next/link"
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from "recharts"
 
 interface DividendData {
@@ -52,11 +50,6 @@ export default function DividendChart() {
             <div className="text-gray-500">Loading chart data...</div>
           </div>
         </CardContent>
-        <div className="flex justify-end mt-4">
-          <Link href="/dividend-calendar" className="text-blue-500 hover:text-blue-700 text-sm flex items-center">
-            Daily Dividend Calendar <ArrowRight className="ml-1 h-3 w-3" />
-          </Link>
-        </div>
       </Card>
     )
   }
@@ -101,11 +94,6 @@ export default function DividendChart() {
           </ResponsiveContainer>
         </div>
       </CardContent>
-      <div className="flex justify-end mt-4">
-        <Link href="/dividend-calendar" className="text-blue-500 hover:text-blue-700 text-sm flex items-center">
-          Daily Dividend Calendar <ArrowRight className="ml-1 h-3 w-3" />
-        </Link>
-      </div>
     </Card>
   )
 }

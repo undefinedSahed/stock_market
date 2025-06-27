@@ -1,8 +1,6 @@
 "use client";
 import useAxios from "@/hooks/useAxios";
 import { useQuery } from "@tanstack/react-query";
-import { Loader2 } from "lucide-react";
-import Link from "next/link";
 import { useParams } from "next/navigation";
 
 export default function DividendDataCard() {
@@ -11,7 +9,7 @@ export default function DividendDataCard() {
 
   const stockName = params.stockName as string;
 
-  const { data: cardData, isLoading } = useQuery({
+  const { data: cardData } = useQuery({
     queryKey: ["devident-card-data"],
     queryFn: async () => {
       const res = await axiosInstence(
@@ -23,13 +21,6 @@ export default function DividendDataCard() {
 
   const cardData2 = cardData?.rawDividends?.length;
   const cardData3 = cardData?.rawDividends[cardData2 - 1];
-
-  if (isLoading)
-    return (
-      <div className="absolute inset-0 bg-white/80 flex items-center justify-center z-10">
-        <Loader2 className="h-12 w-12 animate-spin text-green-500" />
-      </div>
-    );
 
   return (
     <div>
@@ -104,16 +95,6 @@ export default function DividendDataCard() {
             </div>
           </div>
         </div>
-      </div>
-
-      {/* Calculator Link */}
-      <div className="border-t border-gray-200 p-3 text-right">
-        <Link
-          href="/dividend-calculator"
-          className="text-sm text-blue-500 hover:text-blue-700"
-        >
-          Open AAPL in Dividend Calculator ›
-        </Link>
       </div>
     </div>
   );

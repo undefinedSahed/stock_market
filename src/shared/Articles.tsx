@@ -153,8 +153,8 @@ export default function Articles() {
                           <h5 className="font-medium text-[16px] text-[#595959] py-3">
                             {item.category}
                           </h5>
-                          <h2 className="text-lg font-medium pb-3 line-clamp-2">
-                            {item.headline}
+                          <h2 className="text-lg font-medium pb-3">
+                            {item.headline.slice(0, 80)}.....
                           </h2>
                           <div className="flex justify-between items-center">
                             <p className="font-normal text-[16px]">

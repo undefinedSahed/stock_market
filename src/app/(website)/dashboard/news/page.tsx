@@ -29,6 +29,7 @@ import "react-quill/dist/quill.snow.css";
 
 interface News {
   _id: string;
+  symbol : string;
   newsTitle: string;
   newsDescription: string;
   imageLink: string;
@@ -401,6 +402,7 @@ const Page = () => {
           <Table>
             <TableHeader>
               <TableRow className="border-b border-[#b0b0b0]">
+                <TableHead className="text-center">Stock&apos;s Name</TableHead>
                 <TableHead className="text-center">Title</TableHead>
                 <TableHead className="text-center">Description</TableHead>
                 <TableHead className="text-center">Views</TableHead>
@@ -411,6 +413,9 @@ const Page = () => {
             <TableBody>
               {currentPosts.map((news: News) => (
                 <TableRow key={news._id} className="border-b border-[#b0b0b0]">
+                  <TableCell className="border-none max-w-[200px]">
+                    <div className="font-medium">{news.symbol || "N/A"}</div>
+                  </TableCell>
                   <TableCell className="border-none max-w-[200px]">
                     <div className="font-medium">
                       {truncateText(news.newsTitle, 50)}

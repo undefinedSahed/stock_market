@@ -51,6 +51,7 @@ interface AddHoldingData {
     portfolioId: string;
     symbol: string;
     quantity: number;
+    price: number;
 }
 
 
@@ -119,7 +120,8 @@ export default function AddToPortfolio() {
                 body: JSON.stringify({
                     portfolioId: data.portfolioId,
                     symbol: data.symbol,
-                    quantity: data.quantity
+                    quantity: data.quantity,
+                    price: data.price
                 }),
             })
 
@@ -154,7 +156,8 @@ export default function AddToPortfolio() {
             {
                 portfolioId: selectedPortfolioId,
                 symbol: stock.symbol,
-                quantity: 1
+                quantity: 1,
+                price: stock.price
             }
         );
     }

@@ -218,13 +218,13 @@ export default function OptionsChainTable() {
             <thead>
               <tr className="border-b border-gray-200">
                 <th colSpan={5} className="text-center py-3 font-semibold">
-                  {apiResponse?.symbol || "Stock"} Option Calls
+                  <span className=" uppercase">{apiResponse?.symbol || "Stock"}</span> Option Calls
                 </th>
                 <th colSpan={1} className="text-center py-3 font-semibold">
                   {expirationDate}
                 </th>
                 <th colSpan={5} className="text-center py-3 font-semibold">
-                  {apiResponse?.symbol || "Stock"} Option Puts
+                  <span className=" uppercase">{apiResponse?.symbol || "Stock"}</span> Option Puts
                 </th>
               </tr>
               <tr className="border-b border-gray-200 text-sm">

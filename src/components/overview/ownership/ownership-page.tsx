@@ -12,13 +12,14 @@ import StockPremiumBanner from "@/components/Portfolio/chart/chart-bottom";
 import { useParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import useAxios from "@/hooks/useAxios";
+import { Loader2 } from "lucide-react";
 
 export default function OwnershipPage() {
   const axiosInstance = useAxios();
   const params = useParams();
   const stockName = params.stockName;
 
-  const { data: ownershipData } = useQuery({
+  const { data: ownershipData, isLoading } = useQuery({
     queryKey: ["ownership-data", stockName],
     queryFn: async () => {
       const res = await axiosInstance(`/stocks/ownership/${stockName}`);
@@ -26,6 +27,13 @@ export default function OwnershipPage() {
     },
     enabled: !!stockName,
   });
+
+  if (isLoading)
+    return (
+      <div className="absolute inset-0 bg-white/80 flex items-center justify-center z-10">
+        <Loader2 className="h-12 w-12 animate-spin text-green-500" />
+      </div>
+    );
 
   return (
     <div className="flex min-h-screen flex-col lg:w-[80vw] w-[98vw]">

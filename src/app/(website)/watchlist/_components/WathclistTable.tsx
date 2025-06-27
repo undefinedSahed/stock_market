@@ -277,7 +277,22 @@ export default function WatchlistTable() {
       }),
       columnHelper.accessor("marketCap", {
         header: "Market Cap",
-        cell: (info) => info.getValue() || "N/A",
+        cell: (info) => {
+          const raw = info.getValue();
+          const num =
+            typeof raw === "number"
+              ? raw
+              : typeof raw === "string"
+              ? Number(raw.replace(/[^0-9.-]/g, ""))
+              : 0;
+
+          return isNaN(num)
+            ? "N/A"
+            : num.toLocaleString("en-US", {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              });
+        },
         enableSorting: true,
       }),
       columnHelper.display({
@@ -290,7 +305,7 @@ export default function WatchlistTable() {
               onClick={() => handleWatchlist(rowData)}
               className="flex justify-center cursor-pointer"
             >
-              <Trash className="text-sm"/>
+              <Trash className="text-sm" />
             </button>
           );
         },
@@ -323,9 +338,7 @@ export default function WatchlistTable() {
   if (!qualityStock) {
     return (
       <div className="bg-white rounded-lg shadow-lg p-2 sm:p-4 md:p-6 container mx-auto border mt-10">
-        <h2 className="text-xl sm:text-2xl font-medium mb-4">
-          Watchlist
-        </h2>
+        <h2 className="text-xl sm:text-2xl font-medium mb-4">Watchlist</h2>
         <div className="flex items-center justify-center py-8">
           <div className="text-gray-500">Loading stocks...</div>
         </div>

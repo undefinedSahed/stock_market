@@ -1,85 +1,86 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import Image from "next/image"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
-import { EditProfileModal } from "./_components/edit-profile-modal"
-import { EditPasswordModal } from "./_components/edit-password-modal"
-import PathTracker from "../_components/PathTracker"
-import { useSession } from "next-auth/react"
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import useAxios from "@/hooks/useAxios"
-import { toast } from "@/hooks/use-toast"
+import { useState } from "react";
+import Image from "next/image";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { EditProfileModal } from "./_components/edit-profile-modal";
+import { EditPasswordModal } from "./_components/edit-password-modal";
+import PathTracker from "../_components/PathTracker";
+import { useSession } from "next-auth/react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import useAxios from "@/hooks/useAxios";
+import { toast } from "@/hooks/use-toast";
 
 interface UserData {
-  _id: string
-  userName: string
-  email: string
-  firstName?: string
-  lastName?: string
-  phone?: string
-  bio?: string
-  role: string
-  followers: number
-  refferCount: number
-  createdAt: string
-  updatedAt: string
+  _id: string;
+  userName: string;
+  email: string;
+  firstName?: string;
+  lastName?: string;
+  phone?: string;
+  bio?: string;
+  role: string;
+  followers: number;
+  refferCount: number;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export default function ProfilePage() {
-  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false)
-  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false)
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
 
-  const session = useSession()
-  const userID = session?.data?.user?.id
-  const axiosInstance = useAxios()
-  const queryClient = useQueryClient()
+  const session = useSession();
+  const userID = session?.data?.user?.id;
+  const axiosInstance = useAxios();
+  const queryClient = useQueryClient();
 
   const { data: userData = {} as UserData, isLoading } = useQuery({
     queryKey: ["single-user", userID],
     queryFn: async () => {
-      const res = await axiosInstance(`/user/get-user/${userID}`)
-      return res.data.data
+      const res = await axiosInstance(`/user/get-user/${userID}`);
+      return res.data.data;
     },
     enabled: !!userID,
-  })
+  });
+
+  console.log(userData)
 
   const updateUserMutation = useMutation({
     mutationFn: async (updateData: Partial<UserData>) => {
-      const res = await axiosInstance.post("/user/update-user", updateData)
-      return res.data
+      const res = await axiosInstance.post("/user/update-user", updateData);
+      return res.data;
     },
     onSuccess: (data) => {
       // Update the cached data
-      queryClient.setQueryData(["single-user", userID], data.data)
+      queryClient.setQueryData(["single-user", userID], data.data);
       toast({
         title: "Success",
         description: "Profile updated successfully!",
-      })
-      setIsProfileModalOpen(false)
+      });
+      setIsProfileModalOpen(false);
     },
     onError: () => {
       toast({
         title: "Error",
         description: "Failed to update profile",
         variant: "destructive",
-      })
+      });
     },
-  })
+  });
 
   const handleProfileUpdate = (newData: Partial<UserData>) => {
-    updateUserMutation.mutate(newData)
-  }
+    updateUserMutation.mutate(newData);
+  };
 
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500"></div>
       </div>
-    )
+    );
   }
 
   return (
@@ -137,19 +138,13 @@ export default function ProfilePage() {
               <h3 className="text-xl font-bold">Personal Information</h3>
             </CardHeader>
             <CardContent className="grid gap-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">First Name</label>
+                  <label className="block text-sm font-medium mb-1">
+                    Full Name
+                  </label>
                   <Input
-                    value={userData.firstName || "Not provided"}
-                    readOnly
-                    className="bg-gray-50 bg-inherit border border-[#b0b0b0] read-only:cursor-not-allowed"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">Last Name</label>
-                  <Input
-                    value={userData.lastName || "Not provided"}
+                    value={userData?.fullName || "Not provided"}
                     readOnly
                     className="bg-gray-50 bg-inherit border border-[#b0b0b0] read-only:cursor-not-allowed"
                   />
@@ -157,7 +152,9 @@ export default function ProfilePage() {
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium mb-1">Email Address</label>
+                  <label className="block text-sm font-medium mb-1">
+                    Email Address
+                  </label>
                   <Input
                     value={userData.email || ""}
                     readOnly
@@ -165,7 +162,9 @@ export default function ProfilePage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">Phone</label>
+                  <label className="block text-sm font-medium mb-1">
+                    Phone
+                  </label>
                   <Input
                     value={userData.phone || "Not provided"}
                     readOnly
@@ -174,9 +173,11 @@ export default function ProfilePage() {
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">Bio</label>
-                <Textarea
-                  value={userData.bio || "No bio provided"}
+                <label className="block text-sm font-medium mb-1">
+                  Address
+                </label>
+                <Input
+                  value={userData.address || "Not provided"}
                   readOnly
                   className="bg-gray-50 bg-inherit border border-[#b0b0b0] read-only:cursor-not-allowed"
                 />
@@ -191,17 +192,20 @@ export default function ProfilePage() {
           </CardHeader>
           <CardContent className="grid gap-6">
             <div>
-              <label className="block text-sm font-medium mb-1">Current Password</label>
+              <label className="block text-sm font-medium mb-1">
+                Current Password
+              </label>
               <Input
                 type="password"
                 value="############"
-                readOnly
                 className="bg-gray-50 bg-inherit border border-[#b0b0b0] read-only:cursor-not-allowed"
               />
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium mb-1">New Password</label>
+                <label className="block text-sm font-medium mb-1">
+                  New Password
+                </label>
                 <Input
                   type="password"
                   value="############"
@@ -210,7 +214,9 @@ export default function ProfilePage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">Confirm New Password</label>
+                <label className="block text-sm font-medium mb-1">
+                  Confirm New Password
+                </label>
                 <Input
                   type="password"
                   value="############"
@@ -220,7 +226,10 @@ export default function ProfilePage() {
               </div>
             </div>
             <div>
-              <Button onClick={() => setIsPasswordModalOpen(true)} className="bg-green-500 hover:bg-green-600">
+              <Button
+                onClick={() => setIsPasswordModalOpen(true)}
+                className="bg-green-500 hover:bg-green-600"
+              >
                 Change Password
               </Button>
             </div>
@@ -235,8 +244,11 @@ export default function ProfilePage() {
           isLoading={updateUserMutation.isPending}
         />
 
-        <EditPasswordModal isOpen={isPasswordModalOpen} onClose={() => setIsPasswordModalOpen(false)} />
+        <EditPasswordModal
+          isOpen={isPasswordModalOpen}
+          onClose={() => setIsPasswordModalOpen(false)}
+        />
       </div>
     </div>
-  )
+  );
 }

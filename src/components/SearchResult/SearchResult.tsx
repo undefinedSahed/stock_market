@@ -194,8 +194,9 @@ const SearchResult = () => {
                   <Image
                     src={stockData.logo}
                     alt="Company Logo"
-                    width={38}
-                    height={47}
+                    width={1000}
+                    height={1000}
+                    className="h-[38px] w-[38px] rounded-full"
                   />
                 )}
               </div>
@@ -466,7 +467,7 @@ const SearchResult = () => {
         <div className="flex flex-col lg:flex-row gap-4 lg:gap-0 justify-between items-center border-b-2 border-[#737373] pb-2">
           <div>
             <h1 className=" text-3xl font-semibold">{stockData?.company}</h1>
-            <p className="text-[16px] text-gray-400 mt-2">NASDAO: ADBE</p>
+            <p className="text-[16px] text-gray-400 mt-2">{stockData?.exchange}</p>
           </div>
 
           <div className="flex items-center gap-5 max-w-full lg:max-w-none">
@@ -510,8 +511,8 @@ const SearchResult = () => {
       <div className="w-full shadow-lg p-6 border rounded-xl bg-white mt-20">
         <div className="flex flex-col lg:flex-row gap-4 lg:gap-0 justify-between items-center border-b-2 border-[#737373] pb-2">
           <div>
-            <h1 className=" text-3xl font-semibold">Apple Inc</h1>
-            <p className="text-[16px] text-gray-400 mt-2">NASDAO: ADBE</p>
+            <h1 className=" text-3xl font-semibold">{stockData?.company}</h1>
+            <p className="text-[16px] text-gray-400 mt-2">{stockData?.exchange}</p>
           </div>
 
           <div className="flex items-center gap-5 max-w-full lg:max-w-none">

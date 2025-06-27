@@ -21,13 +21,12 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
-  DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
 import Image from "next/image";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
-import { ChartBar, ChevronDown } from "lucide-react";
+import { ChartBar } from "lucide-react";
 import { HiOutlineNewspaper } from "react-icons/hi";
 import { LiaCoinsSolid } from "react-icons/lia";
 import { GiChart } from "react-icons/gi";
@@ -180,12 +179,12 @@ export function OverviewSidebar() {
               })}
 
               <DropdownMenu>
-                <DropdownMenuTrigger asChild>
+                {/* <DropdownMenuTrigger asChild>
                   <SidebarMenuButton className="flex items-center justify-between px-7 py-5 text-xl rounded-none text-[#4E4E4E] hover:text-gray-900">
                     <span className="text-xs font-semibold">More</span>
                     <ChevronDown className="h-5 w-5" />
                   </SidebarMenuButton>
-                </DropdownMenuTrigger>
+                </DropdownMenuTrigger> */}
                 <DropdownMenuContent
                   align="start"
                   className="w-full bg-transparent shadow-none border-none"

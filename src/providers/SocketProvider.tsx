@@ -15,14 +15,26 @@ interface NotificationData {
   logo: string
 }
 
+
+interface NewsNorification {
+  message: string;
+  related: string;
+  summary: string;
+  createdAt: number;
+  url: string;
+}
+
 interface SocketContextType {
   socket: Socket | null;
   notifications: NotificationData[];
+  newsNotification: NewsNorification | null;
+  setNewsNotification: React.Dispatch<React.SetStateAction<NewsNorification | null>>;
   setNotifications: React.Dispatch<React.SetStateAction<NotificationData[]>>;
   notificationCount: NotificationData | null;
   setNotificationCount: React.Dispatch<
     React.SetStateAction<NotificationData | null>
   >;
+
 }
 
 const SocketContext = createContext<SocketContextType | undefined>(undefined);
@@ -33,10 +45,9 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({
   const [socket, setSocket] = useState<Socket | null>(null);
   const [notifications, setNotifications] = useState<NotificationData[]>([]);
   const session = useSession();
-  const token = session?.data?.user?.accessToken;
   const userID = session?.data?.user?.id;
   const [listenerSet, setListenerSet] = useState(false);
-  const [notificationCount, setNotificationCount] = useState(() => {
+  const [newsNotification, setNewsNotification] = useState<NewsNorification | null>(null); const [notificationCount, setNotificationCount] = useState(() => {
     // Read from localStorage during first render
     if (typeof window !== "undefined") {
       const stored = localStorage.getItem("notificationCount");
@@ -55,12 +66,8 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({
   }, [notificationCount]);
 
   useEffect(() => {
-    if (token && !socket) {
-      const socket = io(`${process.env.NEXT_PUBLIC_SOCKET_URL}`, {
-        extraHeaders: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+    if (!socket) {
+      const socket = io(`${process.env.NEXT_PUBLIC_SOCKET_URL}`);
       setSocket(socket);
     }
 
@@ -81,7 +88,18 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({
         setSocket(null);
       };
     }
-  }, [token, socket, listenerSet, userID]);
+  }, [socket, listenerSet]);
+
+
+  useEffect(() => {
+    if (socket) {
+      socket.emit("joinRoom", userID);
+    }
+    socket?.on("news", (data) => {
+      setNewsNotification(data)
+    })
+  }, [socket, userID]);
+
 
   return (
     <SocketContext.Provider
@@ -91,6 +109,8 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({
         setNotifications,
         notificationCount,
         setNotificationCount,
+        newsNotification,
+        setNewsNotification
       }}
     >
       {children}

@@ -48,6 +48,7 @@ interface AddHoldingData {
     portfolioId: string;
     symbol: string;
     quantity: number;
+    price: number;
 }
 
 interface AddStockSearchProps {
@@ -110,6 +111,7 @@ export default function AddStockSearch({ onStockAdded }: AddStockSearchProps) {
                     portfolioId: data.portfolioId,
                     symbol: data.symbol,
                     quantity: data.quantity,
+                    price: data.price
                 }),
             })
 
@@ -125,7 +127,7 @@ export default function AddStockSearch({ onStockAdded }: AddStockSearchProps) {
             queryClient.invalidateQueries({ queryKey: ["portfolio-overview"] })
             setSearchQuery("")
             setShowResults(false)
-            onStockAdded(); // Call callback to signal stock was added (e.g., to close dialog)
+            onStockAdded();
         },
         onError: (error) => {
             toast.error(error.message || "Error adding stock to portfolio.")
@@ -140,7 +142,8 @@ export default function AddStockSearch({ onStockAdded }: AddStockSearchProps) {
         addHolding({
             portfolioId: selectedPortfolioId,
             symbol: stock.symbol,
-            quantity: 1, // Default to 1, could be made configurable later
+            quantity: 1,
+            price: stock.price
         })
     }
 

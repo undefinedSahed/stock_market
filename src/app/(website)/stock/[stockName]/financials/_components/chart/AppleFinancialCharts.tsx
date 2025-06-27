@@ -11,7 +11,6 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
-import { ArrowRight } from "lucide-react";
 import { useEffect, useState } from "react";
 import useAxios from "@/hooks/useAxios";
 import { useParams } from "next/navigation";
@@ -62,7 +61,7 @@ export default function AppleFinancialCharts() {
         {/* Cash Flow Chart */}
         <div className="border rounded-lg p-3 md:p-4 shadow-sm bg-white">
           <h2 className="text-base md:text-lg font-semibold mb-2 md:mb-4">
-            Apple Cash Flow
+            <span className=" uppercase">{stockName}</span> Cash Flow
           </h2>
           <div className="h-[250px] md:h-[300px]">
             <CashFlowChart
@@ -85,19 +84,14 @@ export default function AppleFinancialCharts() {
                 <span className="text-xs text-gray-600">Financing</span>
               </div>
             </div>
-            <a
-              href="#"
-              className="text-xs text-blue-500 flex items-center hover:underline"
-            >
-              Cash Flow <ArrowRight className="ml-1 h-3 w-3" />
-            </a>
           </div>
         </div>
 
         {/* EPS Chart */}
         <div className="border rounded-lg p-3 md:p-4 shadow-sm bg-white">
           <h2 className="text-base md:text-lg font-semibold mb-2 md:mb-4">
-            Apple Forecast EPS vs Actual EPS
+            <span className=" uppercase">{stockName}</span> Forecast EPS vs
+            Actual EPS
           </h2>
           <div className="h-[250px] md:h-[300px]">
             <EPSChart isMobile={isMobile} data={epsData || []} />
@@ -117,12 +111,6 @@ export default function AppleFinancialCharts() {
                 <span className="text-xs text-gray-600">Miss</span>
               </div>
             </div>
-            <a
-              href="#"
-              className="text-xs text-blue-500 flex items-center hover:underline"
-            >
-              Earnings <ArrowRight className="ml-1 h-3 w-3" />
-            </a>
           </div>
         </div>
       </div>

@@ -1,21 +1,25 @@
+"use client"
 import RecentNews from "@/components/overview/news";
-import { Button } from "@/components/ui/button";
-import { Check, ChevronUp } from "lucide-react";
 import FinancialOverview from "./_components/FinancialOverview";
 import FinancialDashboard from "./_components/FinancialDashboard";
 import AppleFinancialCharts from "./_components/chart/AppleFinancialCharts";
 import StockPremiumBanner from "@/components/Portfolio/chart/chart-bottom";
+import { useParams } from "next/navigation";
 
-const page = () => {
+const Page = () => {
+
+  const params = useParams();
+  const stockName = params.stockName;
+
   return (
     <div className="lg:w-[75vw]">
       <div className="mt-8">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <h3 className="text-xl font-bold">
-            Apple (AAPL) Stock News & Sentiment
+            <span className=" uppercase">({stockName})</span> Stock News & Sentiment
           </h3>
 
-          <div className="flex flex-wrap gap-2 items-center">
+          {/* <div className="flex flex-wrap gap-2 items-center">
             <Button
               variant="outline"
               className="h-9 px-4 border-green-500 text-green-600 hover:bg-green-50 rounded-3xl"
@@ -36,12 +40,12 @@ const page = () => {
             >
               Portfolio
             </Button>
-          </div>
+          </div> */}
         </div>
 
-        <div className="mt-4 text-right text-sm text-gray-500">
+        {/* <div className="mt-4 text-right text-sm text-gray-500">
           251,279 Followers
-        </div>
+        </div> */}
       </div>
 
       <div className="flex flex-col lg:flex-row gap-8 mt-8">
@@ -71,4 +75,4 @@ const page = () => {
   );
 };
 
-export default page;
+export default Page;

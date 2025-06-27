@@ -4,7 +4,6 @@ import {
   Database,
   LayoutDashboard,
   LogOut,
-  MicVocal,
   Newspaper,
   Search,
   Settings,
@@ -24,10 +23,11 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import Image from "next/image";
-import { FaBlogger } from "react-icons/fa";
 import { usePathname } from "next/navigation";
 import clsx from "clsx";
 import Link from "next/link";
+import { signOut } from "next-auth/react";
+import { toast } from "sonner";
 
 // Menu items.
 const items = [
@@ -75,18 +75,12 @@ const items = [
     icon: TableRowsSplit,
   },
   {
-    title: "Blogs",
-    url: "/dashboard/blogs",
-    addUrl: "/dashboard/blogs/add-blogs",
-    icon: FaBlogger,
-  },
-  {
     title: "Influencers",
     url: "/dashboard/influencers",
     addUrl: "/dashboard/influencers/add-influencers",
     icon: Users,
   },
-  { title: "Advertisement", url: "/dashboard/advertisement", icon: MicVocal },
+  // { title: "Advertisement", url: "/dashboard/advertisement", icon: MicVocal },
   { title: "Refer", url: "/dashboard/refer", icon: UserRoundPlus },
   { title: "Settings", url: "/dashboard/settings", icon: Settings },
 ];
@@ -141,7 +135,13 @@ export function AppSidebar() {
         </SidebarGroup>
 
         <div>
-          <button className="flex gap-2 font-medium pl-7">
+          <button
+            onClick={() => {
+              signOut({ callbackUrl: "/" });
+              toast("Log out successfull!");
+            }}
+            className="flex gap-2 font-medium pl-7"
+          >
             {" "}
             <LogOut /> Log Out
           </button>

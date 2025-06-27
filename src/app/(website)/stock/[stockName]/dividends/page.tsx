@@ -1,23 +1,28 @@
+"use client"
 import RecentNews from "@/components/overview/news";
-import { Button } from "@/components/ui/button";
-import { Check, ChevronUp, Search } from "lucide-react";
 import DividendDataCard from "./_components/DividendDataCard";
 import DividendChart from "./_components/chart/DividendChart";
 import DividendYieldChartCompo from "./_components/DividendYieldChartCompo";
 import DividendHistory from "./_components/DividendHistory";
 import OverviewFAQ from "@/components/overview/overview-faq";
 import StockPremiumBanner from "@/components/Portfolio/chart/chart-bottom";
+import { useParams } from "next/navigation";
 
-const page = () => {
+const Page = () => {
+
+  const params = useParams();
+  const stockName = params.stockName;
+
   return (
     <div className="lg:w-[75vw]">
       <div className="mt-8">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <h3 className="text-xl font-bold">
-            Apple (AAPL) Stock Forecast & Price Target
+            <span className=" uppercase">({stockName})</span> Stock News &
+            Sentiment
           </h3>
 
-          <div className="flex flex-wrap gap-2 items-center">
+          {/* <div className="flex flex-wrap gap-2 items-center">
             <Button
               variant="outline"
               className="h-9 px-4 border-green-500 text-green-600 hover:bg-green-50 rounded-3xl"
@@ -38,22 +43,12 @@ const page = () => {
             >
               Portfolio
             </Button>
-          </div>
+          </div> */}
         </div>
 
-        <div className="mt-4 text-right text-sm text-gray-500">
+        {/* <div className="mt-4 text-right text-sm text-gray-500">
           251,279 Followers
-        </div>
-      </div>
-
-      <div className="w-[350px] relative mt-8 lg:mt-0">
-        <input
-          type="text"
-          className="border border-black outline-none rounded-3xl px-3 py-5 h-[35px] w-full"
-          placeholder="Enter symbol for earnings data"
-        />
-
-        <Search className="h-5 w-5 absolute top-1/4 right-3" />
+        </div> */}
       </div>
 
       <div className="flex flex-col lg:flex-row gap-8 mt-8">
@@ -91,4 +86,4 @@ const page = () => {
   );
 };
 
-export default page;
+export default Page;

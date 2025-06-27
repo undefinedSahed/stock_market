@@ -118,7 +118,7 @@ const EarningChart = () => {
           </button>
 
           <button className="w-full bg-[#cccccc] py-3 flex items-center justify-center gap-2 rounded-3xl text-green-600">
-             <Link href={`tree?q=${stock}`}>
+             <Link href={`/tree?q=${stock}`}>
             <button className="w-full bg-[#cccccc] py-3 flex items-center justify-center gap-2 rounded-3xl text-green-600">
               <Image
                 src={"/images/transcript.png"}

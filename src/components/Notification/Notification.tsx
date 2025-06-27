@@ -1,7 +1,7 @@
 "use client"
 import { useState } from "react"
 import { MoreHorizontal } from "lucide-react"
-import Image from "next/image"
+import { useSocketContext } from "@/providers/SocketProvider"
 
 export default function NotificationsPage() {
   const [activeTab, setActiveTab] = useState("today")
@@ -9,7 +9,6 @@ export default function NotificationsPage() {
   const [notifications, setNotifications] = useState([
     {
       id: 1,
-      avatar: "",
       message:
         "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla lorem et maximus nec malesuada vitae, volutpat sed ipsum.",
       time: "1hr ago",
@@ -19,7 +18,6 @@ export default function NotificationsPage() {
     },
     {
       id: 2,
-      avatar: "",
       message:
         "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla lorem et maximus nec malesuada vitae, volutpat sed ipsum.",
       time: "1hr ago",
@@ -29,7 +27,6 @@ export default function NotificationsPage() {
     },
     {
       id: 3,
-      avatar: "",
       message:
         "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla lorem et maximus nec malesuada vitae, volutpat sed ipsum.",
       time: "1hr ago",
@@ -39,7 +36,6 @@ export default function NotificationsPage() {
     },
     {
       id: 4,
-      avatar: "",
       message:
         "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla lorem et maximus nec malesuada vitae, volutpat sed ipsum.",
       time: "1hr ago",
@@ -49,7 +45,6 @@ export default function NotificationsPage() {
     },
     {
       id: 5,
-      avatar: "",
       message:
         "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla lorem et maximus nec malesuada vitae, volutpat sed ipsum.",
       time: "1hr ago",
@@ -59,7 +54,6 @@ export default function NotificationsPage() {
     },
     {
       id: 6,
-      avatar: "",
       message:
         "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla lorem et maximus nec malesuada vitae, volutpat sed ipsum.",
       time: "3 days ago",
@@ -69,7 +63,6 @@ export default function NotificationsPage() {
     },
     {
       id: 7,
-      avatar: "",
       message:
         "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla lorem et maximus nec malesuada vitae, volutpat sed ipsum.",
       time: "4 days ago",
@@ -79,7 +72,6 @@ export default function NotificationsPage() {
     },
     {
       id: 8,
-      avatar: "",
       message:
         "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla lorem et maximus nec malesuada vitae, volutpat sed ipsum.",
       time: "5 days ago",
@@ -89,7 +81,6 @@ export default function NotificationsPage() {
     },
     {
       id: 9,
-      avatar: "",
       message:
         "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla lorem et maximus nec malesuada vitae, volutpat sed ipsum.",
       time: "1 week ago",
@@ -99,7 +90,6 @@ export default function NotificationsPage() {
     },
     {
       id: 10,
-      avatar: "",
       message:
         "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla lorem et maximus nec malesuada vitae, volutpat sed ipsum.",
       time: "2 weeks ago",
@@ -108,6 +98,9 @@ export default function NotificationsPage() {
       date: new Date(Date.now() - 1000 * 60 * 60 * 24 * 14), // Previous
     },
   ])
+
+
+  const { newsNotification } = useSocketContext()
 
   // Filter notifications based on active tab
   const filteredNotifications = notifications
@@ -161,6 +154,9 @@ export default function NotificationsPage() {
       setActiveTab(tab)
     }
   }
+
+
+  console.log(newsNotification)
 
   return (
     <div className="container mx-auto px-6 py-4 mt-28">
@@ -221,15 +217,6 @@ export default function NotificationsPage() {
               ) : (
                 <div className="w-1.5 h-1.5 rounded-full bg-gray-400"></div>
               )}
-              <div className="w-12 h-12 rounded-full overflow-hidden mr-3 flex-shrink-0">
-                <Image
-                  src={notification.avatar || "/placeholder.svg?height=48&width=48&query=user avatar"}
-                  height={48}
-                  width={48}
-                  alt="User avatar"
-                  className="w-full h-full object-cover"
-                />
-              </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm text-gray-700 pr-8 line-clamp-2">{notification.message}</p>
                 <p className="text-xs text-gray-500 mt-1">

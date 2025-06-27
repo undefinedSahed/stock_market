@@ -1,5 +1,6 @@
 import React from "react";
 import OwnershipOverview from "../ownership-overview";
+import { useParams } from "next/navigation";
 
 type Props = {
   ownerOverview: {
@@ -23,6 +24,9 @@ export default function StockOwnershipOverview({ ownerOverview }: Props) {
   const totalInstitutional =
     breakdown.mutualFunds + breakdown.otherInstitutions;
 
+  const params = useParams();
+  const stockName = params.stockName;
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 items-center gap-8 py-6 px-2 md:px-5 shadow-[0px_0px_10px_1px_#0000001A]">
       <div className="w-full md:border-r-2">
@@ -30,7 +34,7 @@ export default function StockOwnershipOverview({ ownerOverview }: Props) {
       </div>
       <div className="lg:pl-6 pl-2 w-full text-sm md:text-base text-gray-700 leading-relaxed">
         <p>
-          The ownership structure of Apple (AAPL) stock is a mix of
+          The ownership structure of <span className=" uppercase font-bold">{stockName}</span> stock is a mix of
           institutional, insider, and retail investors. Approximately{" "}
           <strong>{totalInstitutional.toFixed(2)}%</strong> of the
           company&apos;s stock is owned by{" "}

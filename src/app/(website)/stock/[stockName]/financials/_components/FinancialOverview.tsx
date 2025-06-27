@@ -352,7 +352,7 @@ export default function FinancialOverview() {
   };
 
   return (
-    <div className="container mx-auto p-4 sm:p-6 lg:p-8 font-sans bg-gray-50 min-h-screen">
+    <div className="container mx-auto p-4 sm:p-6 lg:p-4 font-sans bg-gray-50 min-h-screen">
       <div className="bg-white rounded-xl overflow-hidden border border-gray-100">
         {/* Tabs */}
         <div className="flex flex-wrap justify-center md:justify-start gap-3 p-5 border-b border-gray-200 bg-gray-50">

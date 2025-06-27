@@ -1,13 +1,13 @@
 "use client";
 
 import RecentNews from "@/components/overview/news";
-import { Button } from "@/components/ui/button";
-import { Check, ChevronUp, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import StockNews from "./_components/StockNews";
 import StockPremiumBanner from "@/components/Portfolio/chart/chart-bottom";
 import OverviewFAQ from "@/components/overview/overview-faq";
 import useAxios from "@/hooks/useAxios";
 import { useQuery } from "@tanstack/react-query";
+import { useParams } from "next/navigation";
 
 const Page = () => {
   const axiosInstance = useAxios();
@@ -19,6 +19,9 @@ const Page = () => {
       return res.data.data;
     },
   });
+
+  const params = useParams();
+  const stockName = params.stockName;
 
   if (isLoading)
     return (
@@ -32,10 +35,10 @@ const Page = () => {
       <div className="mt-8">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <h3 className="text-xl font-bold">
-            Apple (AAPL) Stock News & Sentiment
+            <span className=" uppercase">({stockName})</span> Stock News & Sentiment
           </h3>
 
-          <div className="flex flex-wrap gap-2 items-center">
+          {/* <div className="flex flex-wrap gap-2 items-center">
             <Button
               variant="outline"
               className="h-9 px-4 border-green-500 text-green-600 hover:bg-green-50 rounded-3xl"
@@ -56,12 +59,12 @@ const Page = () => {
             >
               Portfolio
             </Button>
-          </div>
+          </div> */}
         </div>
 
-        <div className="mt-4 text-right text-sm text-gray-500">
+        {/* <div className="mt-4 text-right text-sm text-gray-500">
           251,279 Followers
-        </div>
+        </div> */}
       </div>
 
       {/* page layout */}

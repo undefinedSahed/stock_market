@@ -18,6 +18,7 @@ import "react-quill/dist/quill.snow.css";
 import PathTracker from "../../_components/PathTracker";
 
 interface NewsFormData {
+  stockName: string;
   newsTitle: string;
   newsDescription: string;
   imageLink: string;
@@ -161,11 +162,11 @@ const Page = () => {
     try {
       // Create FormData to send both form fields and image file
       const formData = new FormData();
+      formData.append("symbol", data.stockName);
       formData.append("newsTitle", data.newsTitle);
       formData.append("newsDescription", data.newsDescription);
       formData.append("imageLink", image.file); // Add the actual image file
-      formData.append("source", "admin")
-
+      formData.append("source", "admin");
 
       await mutateAsync(formData);
     } catch (error) {
@@ -234,6 +235,49 @@ const Page = () => {
         >
           <div>
             <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
+              <div className="space-y-2">
+                <label
+                  htmlFor="stocksName"
+                  className="text-sm font-medium text-gray-700"
+                >
+                  {language === "ar" ? "اسم السهم*" : "Stock's Name *"}
+                </label>
+                <input
+                  id="stocksName"
+                  placeholder={
+                    language === "ar" ? "أدخل بحث الخبر" : "Enter Stock's Name"
+                  }
+                  className={`border p-4 rounded-lg bg-inherit outline-none w-full ${
+                    errors.newsTitle ? "border-red-500" : "border-[#b0b0b0]"
+                  } ${language === "ar" ? "text-right" : "text-left"}`}
+                  dir={language === "ar" ? "rtl" : "ltr"}
+                  {...register("stockName", {
+                    required:
+                      language === "ar"
+                        ? "عنوان الخبر مطلوب"
+                        : "News title is required",
+                    minLength: {
+                      value: 3,
+                      message:
+                        language === "ar"
+                          ? "يجب أن يكون العنوان 3 أحرف على الأقل"
+                          : "Title must be at least 3 characters long",
+                    },
+                    maxLength: {
+                      value: 100,
+                      message:
+                        language === "ar"
+                          ? "يجب أن يكون العنوان أقل من 100 حرف"
+                          : "Title must be less than 100 characters",
+                    },
+                  })}
+                />
+                {errors.newsTitle && (
+                  <p className="text-red-500 text-sm">
+                    {errors.newsTitle.message}
+                  </p>
+                )}
+              </div>
               <div className="space-y-2">
                 <label
                   htmlFor="newsTitle"

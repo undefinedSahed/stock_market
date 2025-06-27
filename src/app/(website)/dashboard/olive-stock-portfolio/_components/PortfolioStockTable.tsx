@@ -140,7 +140,7 @@ export default function PortfolioStockTable() {
                 <th className="px-2 sm:px-4 py-3 text-left text-xs sm:text-sm font-medium text-gray-700">
                   <div className="flex items-center">
                     <p>Ratings in Last</p>
-                    <p className="ml-1">72 Days ▼</p>
+                    <p className="ml-1">72 Days</p>
                   </div>
                 </th>
                 <th className="px-2 sm:px-4 py-3 text-left text-xs sm:text-sm font-medium text-gray-700">

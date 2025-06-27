@@ -15,7 +15,7 @@ const MyPortfolio = () => {
   const { data: session } = useSession();
   const { selectedPortfolioId } = usePortfolio();
 
-  const isQueryEnabled = !!session?.user?.accessToken && !!selectedPortfolioId;
+  const isQueryEnabled = !!session?.user?.accessToken
 
   const {
     data: portfolioData,
@@ -25,7 +25,7 @@ const MyPortfolio = () => {
     queryKey: ["portfolio", selectedPortfolioId],
     queryFn: async () => {
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/portfolio/get/${selectedPortfolioId}`,
+        `${process.env.NEXT_PUBLIC_API_URL}/portfolio/get`,
         {
           headers: {
             "Content-Type": "application/json",
@@ -39,6 +39,9 @@ const MyPortfolio = () => {
     enabled: isQueryEnabled,
   });
 
+
+  console.log("Fuckury : ", portfolioData);
+
   // Show loading if the query is enabled and is either loading or not yet fetched
   if (isQueryEnabled && (isLoading || !isFetched)) {
     return (
@@ -51,7 +54,7 @@ const MyPortfolio = () => {
   }
 
   // After query is finished and portfolioData is still nullish
-  if (isQueryEnabled && isFetched && !portfolioData) {
+  if (isQueryEnabled && isFetched && portfolioData.length === 0) {
     return (
       <div className="w-[80vw] flex justify-center items-center h-[80vh]">
         <div className="text-center">
@@ -76,7 +79,6 @@ const MyPortfolio = () => {
       </div>
     );
   }
-
 
   return (
     <div className="w-[83vw] overflow-hidden">

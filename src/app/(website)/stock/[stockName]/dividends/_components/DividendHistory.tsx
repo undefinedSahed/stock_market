@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/table";
 import useAxios from "@/hooks/useAxios";
 import { useQuery } from "@tanstack/react-query";
+import { useParams } from "next/navigation";
 
 interface DividendData {
   adjustedAmount: number;
@@ -33,6 +34,8 @@ export default function DividendHistory() {
   const initialRows = 7;
 
   const axiosInstance = useAxios();
+  const params = useParams();
+  const stockName = params.stockName;
 
   const {
     data: history,
@@ -131,7 +134,7 @@ export default function DividendHistory() {
 
   return (
     <div>
-      <h1 className="text-xl font-bold mb-4">AAPL Dividend History</h1>
+      <h1 className="text-xl font-bold mb-4"><span className=" uppercase">{stockName}</span> Dividend History</h1>
 
       <div className="rounded-lg overflow-hidden border border-gray-200">
         <Table>
