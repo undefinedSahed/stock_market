@@ -1,47 +1,48 @@
-"use client";
-import React from "react";
-import RecentNews from "../news";
-import PerformanceCoverage from "../stock-analysis/media-coverage-chart";
-import StockPremiumBanner from "@/components/Portfolio/chart/chart-bottom";
-import SimilarStocksTable from "./similar-stocks-table";
-import useAxios from "@/hooks/useAxios";
-import { useParams } from "next/navigation";
-import { useQuery } from "@tanstack/react-query";
+"use client"
+
+import React from "react"
+import RecentNews from "../news"
+import PerformanceCoverage from "../stock-analysis/media-coverage-chart"
+import StockPremiumBanner from "@/components/Portfolio/chart/chart-bottom"
+import SimilarStocksTable from "./similar-stocks-table"
+import useAxios from "@/hooks/useAxios"
+import { useParams } from "next/navigation"
+import { useQuery } from "@tanstack/react-query"
 
 // Define the interface for the similar stock data received from the API
 interface SimilarStockApiData {
-  ticker: string;
-  companyName: string;
-  price: string;
-  marketCap: string;
-  peRatio: string;
-  yearlyGain: string;
-  analystConsensus: string; // This will be "N/A" from the API for now
-  analystPriceTarget: string; // This will be "-" from the API for now
-  topAnalystPriceTarget: string; // This will be "-" from the API for now
+  ticker: string
+  companyName: string
+  price: string
+  marketCap: string
+  peRatio: string
+  yearlyGain: string
+  analystConsensus: string // This will be "N/A" from the API for now
+  analystPriceTarget: string // This will be "-" from the API for now
+  topAnalystPriceTarget: string // This will be "-" from the API for now
 }
 
 export default function SimilarStocksPage() {
-  const axiosInstance = useAxios();
-  const params = useParams();
-  // Ensure stockName is a string, as useParams can return string | string[]
-  const stockName = typeof params.stockName === 'string' ? params.stockName : undefined;
+  const axiosInstance = useAxios()
+  const params = useParams()
 
-  const { data: similarStockApiResponse } = useQuery<{ similarStocks: SimilarStockApiData[] }>({
+  // Ensure stockName is a string, as useParams can return string | string[]
+  const stockName = typeof params.stockName === "string" ? params.stockName : undefined
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: similarStockApiResponse } = useQuery<{ similarStocks: SimilarStockApiData[]; chartData: any }>({
     queryKey: ["similar-stock-data", stockName],
     queryFn: async () => {
-      const res = await axiosInstance(`/stocks/similar/${stockName}`);
-      return res.data;
+      const res = await axiosInstance(`/stocks/similar/${stockName}`)
+      return res.data
     },
     enabled: !!stockName,
-  });
+  })
 
-  
   const transformedStockData = React.useMemo(() => {
     if (!similarStockApiResponse?.similarStocks) {
-      return [];
+      return []
     }
-
     return similarStockApiResponse.similarStocks.map((stock) => ({
       symbol: stock.ticker,
       name: stock.companyName,
@@ -54,11 +55,10 @@ export default function SimilarStocksPage() {
         fillPercentage: stock.analystConsensus === "N/A" ? 0 : 50,
       },
       analystPriceTarget: stock.analystPriceTarget !== "-",
-      topAnalystPriceTarget: stock.topAnalystPriceTarget !== "-", 
+      topAnalystPriceTarget: stock.topAnalystPriceTarget !== "-",
       smartScore: false,
-    }));
-  }, [similarStockApiResponse]);
-
+    }))
+  }, [similarStockApiResponse])
 
   return (
     <div className="flex min-h-screen flex-col lg:w-[80vw] w-[98vw]">
@@ -72,7 +72,7 @@ export default function SimilarStocksPage() {
             />
           </div>
           <div className="mt-8 lg:mt-20">
-            <PerformanceCoverage />
+            <PerformanceCoverage similarStockApiResponse={similarStockApiResponse} />
           </div>
           <div className="mt-8 lg:mt-20">
             <StockPremiumBanner />
@@ -83,5 +83,5 @@ export default function SimilarStocksPage() {
         </div>
       </div>
     </div>
-  );
+  )
 }

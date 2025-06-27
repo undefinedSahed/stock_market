@@ -14,12 +14,7 @@ const formSchema = z.object({
     firstName: z.string().min(2, { message: "First name must be at least 2 characters" }),
     lastName: z.string().min(2, { message: "Last name must be at least 2 characters" }),
     email: z.string().email({ message: "Please enter a valid email address" }),
-    phoneNumber: z
-        .string()
-        .regex(/^\+?[0-9\s\-()]{7,}$/, {
-            message: "Please enter a valid phone number",
-        })
-        .optional(),
+    phoneNumber: z.string().min(10, { message: "Phone number must be at least 10 characters" }),
     subject: z.string().min(5, { message: "Subject must be at least 5 characters" }),
     message: z.string().min(10, { message: "Message must be at least 10 characters" }),
 })
@@ -44,9 +39,14 @@ export default function SupportForm() {
 
     async function onSubmit(data: FormValues) {
         setIsSubmitting(true)
-        console.log(data)
         try {
-            await new Promise((resolve) => setTimeout(resolve, 1000))
+            await fetch(`${process.env.NEXT_PUBLIC_API_URL}/user/support`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(data),
+            })
             setSubmitSuccess(true)
             form.reset()
         } catch (error) {

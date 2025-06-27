@@ -151,7 +151,7 @@ export function PortfolioSidebar() {
                 <SelectContent>
                   {portfolioData?.length > 0 ? (
                     portfolioData?.map((portfolio: { _id: string, name: string }) => (
-                      <SelectItem key={portfolio._id} value={portfolio._id} className="text-base">
+                      <SelectItem key={portfolio._id} value={portfolio._id} className="text-base cursor-pointer">
                         {portfolio.name}
                       </SelectItem>
                     )) ): "No portfolio available"} 

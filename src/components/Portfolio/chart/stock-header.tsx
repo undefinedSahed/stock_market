@@ -72,13 +72,13 @@ export default function StockHeader({
 
 
     const { mutate: getOverview, data: overviewData } = useMutation({
-        mutationFn: async (holdings: { symbol: string; shares: number }[]) => {
+        mutationFn: async () => {
             const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/portfolio/overview`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
                 },
-                body: JSON.stringify({ holdings }),
+                body: JSON.stringify({ id: selectedPortfolioId }),
             });
 
             if (!res.ok) {
@@ -91,16 +91,11 @@ export default function StockHeader({
 
 
     useEffect(() => {
-        if (portfolioData && portfolioData.stocks && portfolioData.stocks.length > 0) {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const holdings = portfolioData.stocks.map((stock: any) => ({
-                symbol: stock.symbol,
-                shares: stock.quantity,
-            }));
-            getOverview(holdings);
+        if (portfolioData && portfolioData.stocks && portfolioData.stocks.length > 0 && selectedPortfolioId) {
+            getOverview();
         }
         // No need to set selectedPortfolioId here, as it's now controlled by the context
-    }, [portfolioData, getOverview]);
+    }, [portfolioData, getOverview, selectedPortfolioId]);
 
 
     // Update stock info when selected stock changes
@@ -114,6 +109,9 @@ export default function StockHeader({
         /* eslint-disable @typescript-eslint/no-explicit-any */
         return (comparisonColors as any)[symbol] || "#f43f5e" // Default to red if not found
     }
+
+
+
 
     return (
         <div className="space-y-4">
@@ -162,27 +160,23 @@ export default function StockHeader({
                 </div>
 
                 <Tabs value={timeframe} onValueChange={onTimeframeChange} className="h-9 pb-16 md:pb-0">
-                    <TabsList className="grid grid-cols-6 md:grid-cols-8">
-                        <TabsTrigger value="1D">1D</TabsTrigger>
-                        <TabsTrigger value="5D">5D</TabsTrigger>
-                        <TabsTrigger value="1M">1M</TabsTrigger>
-                        <TabsTrigger value="3M">3M</TabsTrigger>
-                        <TabsTrigger value="6M">6M</TabsTrigger>
-                        <TabsTrigger value="YTD">YTD</TabsTrigger>
-                        <TabsTrigger value="1Y">1Y</TabsTrigger>
-                        <TabsTrigger value="5Y">5Y</TabsTrigger>
+                    <TabsList className="grid grid-cols-8 md:grid-cols-8">
+                        <TabsTrigger value="1D" className="px-2">1D</TabsTrigger>
+                        <TabsTrigger value="5D" className="px-2">5D</TabsTrigger>
+                        <TabsTrigger value="1M" className="px-2">1M</TabsTrigger>
+                        <TabsTrigger value="3M" className="px-2">3M</TabsTrigger>
+                        <TabsTrigger value="6M" className="px-2">6M</TabsTrigger>
+                        <TabsTrigger value="YTD" className="px-2">YTD</TabsTrigger>
+                        <TabsTrigger value="1Y" className="px-2">1Y</TabsTrigger>
+                        <TabsTrigger value="5Y" className="px-2">5Y</TabsTrigger>
                     </TabsList>
                 </Tabs>
             </div>
 
-            <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="flex flex-wrap items-center gap-10">
                 <div className="flex items-center gap-2">
                     <div className="font-bold text-xl">{selectedStock}</div>
-                    <Button variant="ghost" size="sm" className="text-muted-foreground">
-                        Volume
-                    </Button>
                 </div>
-
                 {comparisonStocks && onToggleComparison &&
                     comparisonStocks?.length > 0 && (
                         <div className="flex flex-wrap items-center gap-2">

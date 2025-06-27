@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import * as echarts from "echarts";
 import { Card } from "@/components/ui/card";
+import { Loader2 } from "lucide-react";
 
 interface StockChartProps {
     selectedStock: string;
@@ -228,15 +229,6 @@ export default function StockChart({ selectedStock, timeframe, comparisonStocks 
         // Display "Data not available" message if main stock data is missing
         if (!mainStockData) {
             chartInstanceRef.current.setOption({
-                title: {
-                    text: "Data not available",
-                    left: "center",
-                    top: "center",
-                    textStyle: {
-                        color: "#999",
-                        fontSize: 20,
-                    },
-                },
                 xAxis: { show: false },
                 yAxis: { show: false },
                 grid: { show: false },
@@ -480,7 +472,7 @@ export default function StockChart({ selectedStock, timeframe, comparisonStocks 
         <Card className="relative overflow-hidden max-w-[98vw]">
             {loading && (
                 <div className="absolute inset-0 bg-white/80 flex items-center justify-center z-10">
-                    <div className="text-sm text-muted-foreground">Loading chart data...</div>
+                    <Loader2 className="h-12 w-12 animate-spin text-green-500" />
                 </div>
             )}
             {/* Display "Data not available" if not loading and main stock data is missing */}

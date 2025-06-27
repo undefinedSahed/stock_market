@@ -16,6 +16,7 @@ import { useSession } from 'next-auth/react';
 import { usePortfolio } from '../portfolioContext';
 import { useMutation } from '@tanstack/react-query';
 import Link from 'next/link';
+import { Loader2 } from 'lucide-react';
 
 
 interface News {
@@ -32,7 +33,7 @@ export default function NewsList() {
     const { selectedPortfolioId } = usePortfolio();
 
 
-    const { mutate: getMyNews, data: myNews } = useMutation({
+    const { mutate: getMyNews, data: myNews, isPending: isNewsLoading } = useMutation({
         mutationFn: async () => {
             const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/news/get-protfolio-news`, {
                 method: "POST",
@@ -87,28 +88,38 @@ export default function NewsList() {
                     <LuSearch className='absolute right-4 top-1/2 -translate-y-1/2 text-xl' />
                 </div>
             </div>
-            <Table>
-                <TableHeader className='[&_tr]:border-b-0'>
-                    <TableRow className='text-xs'>
-                        <TableHead className="md:w-[100px] w-12 p-0 md:p-2">Date</TableHead>
-                        <TableHead className='text-start p-0 md:p-2'>Ticker</TableHead>
-                        <TableHead className='p-0'>Article</TableHead>
-                    </TableRow>
-                </TableHeader>
-                <TableBody className='md:text-sm text-xs'>
-                    {myNews?.map((data: News) => (
-                        <TableRow key={data.id} className='border-b-0'>
-                            <TableCell className="font-medium text-start p-0 md:p-2">{shortTimeAgo(data.datetime)}</TableCell>
-                            <TableCell className='text-start md:w-20 w-12 p-0 md:p-2'>{data.symbol}</TableCell>
-                            <TableCell className='text-start p-0 pl-3'>
-                                <Link href={data.url} target='_blank'>
-                                    {data.headline}
-                                </Link>
-                            </TableCell>
-                        </TableRow>
-                    ))}
-                </TableBody>
-            </Table>
+            {
+                isNewsLoading ? (
+                    <div className="flex justify-center items-center w-full py-5">
+                        <Loader2 className='animate-spin w-12 h-12 text-green-500' />
+                    </div>
+                )
+                    :
+                    (
+                        <Table>
+                            <TableHeader className='[&_tr]:border-b-0'>
+                                <TableRow className='text-xs'>
+                                    <TableHead className="md:w-[100px] w-12 p-0 md:p-2">Date</TableHead>
+                                    <TableHead className='text-start p-0 md:p-2'>Ticker</TableHead>
+                                    <TableHead className='p-0'>Article</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody className='md:text-sm text-xs'>
+                                {myNews?.map((data: News) => (
+                                    <TableRow key={data.id} className='border-b-0'>
+                                        <TableCell className="font-medium text-start p-0 md:p-2">{shortTimeAgo(data.datetime)}</TableCell>
+                                        <TableCell className='text-start md:w-20 w-12 p-0 md:p-2'>{data.symbol}</TableCell>
+                                        <TableCell className='text-start p-0 pl-3'>
+                                            <Link href={data.url} target='_blank'>
+                                                {data.headline}
+                                            </Link>
+                                        </TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    )
+            }
         </div>
     )
 }

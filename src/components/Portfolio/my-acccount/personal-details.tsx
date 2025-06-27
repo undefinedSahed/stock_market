@@ -26,16 +26,21 @@ import { toast } from "sonner"
 interface ProfileData {
     fullName: string
     email: string
-    imageLink?: string
     address?: string
+    profilePhoto?: File | null // Add profilePhoto to the type
 }
 
-export default function PersonalDetailsCard() {
+interface PersonalDetailsProps {
+    selectedImage: File | null;
+    setImagePreview: React.Dispatch<React.SetStateAction<string | null>>;
+}
+
+export default function PersonalDetailsCard({ selectedImage, setImagePreview }: PersonalDetailsProps) {
     const { data: session } = useSession()
     const userId = session?.user?.id
     const queryClient = useQueryClient()
 
-    const { data: user } = useQuery({
+    const { data: user, isLoading: userLoading } = useQuery({
         queryKey: ["user"],
         queryFn: async () => {
             const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/user/get-user/${userId}`)
@@ -57,7 +62,7 @@ export default function PersonalDetailsCard() {
     const [editingField, setEditingField] = useState<string | null>(null)
     const [tempValue, setTempValue] = useState("")
     const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false)
-    const [oldPassword, setOldPassword] = useState("") // Added oldPassword state
+    const [oldPassword, setOldPassword] = useState("")
     const [newPassword, setNewPassword] = useState("")
     const [confirmPassword, setConfirmPassword] = useState("")
 
@@ -75,20 +80,23 @@ export default function PersonalDetailsCard() {
 
     const updateProfileMutation = useMutation({
         mutationFn: async (profileData: ProfileData) => {
+            const formData = new FormData();
+            formData.append("id", userId || "");
+            formData.append("userName", session?.user?.name || "");
+            formData.append("fullName", profileData.fullName);
+            formData.append("email", profileData.email);
+            formData.append("address", profileData.address || "");
+
+            if (profileData.profilePhoto) { // Append image if it exists
+                formData.append("imageLink", profileData.profilePhoto);
+            }
+
             const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/user/update-user`, {
                 method: "POST",
                 headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${session?.user?.accessToken}`,
+                    Authorization: `Bearer ${session?.user?.accessToken}`, // Do NOT set Content-Type for FormData, browser sets it
                 },
-                body: JSON.stringify({
-                    id: userId,
-                    userName: session?.user?.name,
-                    fullName: profileData.fullName,
-                    email: profileData.email,
-                    imageLink: profileData.imageLink || "",
-                    address: profileData.address || "",
-                }),
+                body: formData,
             })
 
             if (!response.ok) throw new Error("Failed to update profile")
@@ -98,6 +106,7 @@ export default function PersonalDetailsCard() {
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["user"] })
             toast.success("Profile updated successfully!")
+            setImagePreview(null);
         },
         onError: (error: unknown) => {
             const message = error instanceof Error ? error.message : "Failed to update profile"
@@ -106,28 +115,28 @@ export default function PersonalDetailsCard() {
     })
 
     const resetPasswordMutation = useMutation({
-        mutationFn: async ({ oldPassword, newPassword }: { oldPassword: string; newPassword: string }) => {
-            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/change-password`, {
+        mutationFn: async ({ oldPassword, newPassword }: { oldPassword: string, newPassword: string }) => {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/user/update-password`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
                     Authorization: `Bearer ${session?.user?.accessToken}`,
                 },
                 body: JSON.stringify({
-                    userId: session?.user?.id,
-                    oldPassword: oldPassword,
-                    newPassword: newPassword,
+                    id: userId,
+                    oldPassword,
+                    newPassword,
                 }),
-            })
+            });
 
-            if (!response.ok) throw new Error("Failed to reset password")
+            if (!response.ok) throw new Error("Failed to update password");
 
-            return response.json()
+            return response.json();
         },
         onSuccess: () => {
             toast.success("Password updated successfully!")
             setIsPasswordDialogOpen(false)
-            setOldPassword("") // Clear old password on success
+            setOldPassword("")
             setNewPassword("")
             setConfirmPassword("")
         },
@@ -143,6 +152,7 @@ export default function PersonalDetailsCard() {
     }
 
     const handleSave = (field: string) => {
+        // This handleSave is for local state changes, the actual API call happens in handleSaveChanges
         if (field === "phoneNumber" && !isValidPhoneNumber(tempValue)) {
             toast.error("Invalid phone number")
             return
@@ -151,7 +161,7 @@ export default function PersonalDetailsCard() {
         const updatedData = { ...userData, [field]: tempValue }
         setUserData(updatedData)
         setEditingField(null)
-        toast.success("Changes saved locally")
+        // No toast here as the main save button will show success/error for API call
     }
 
     const handleCancel = () => setEditingField(null)
@@ -172,14 +182,16 @@ export default function PersonalDetailsCard() {
             return
         }
 
-        resetPasswordMutation.mutate({ oldPassword, newPassword })
+        resetPasswordMutation.mutate({ oldPassword, newPassword }) // Pass oldPassword and newPassword
     }
 
     const handleSaveChanges = () => {
-        updateProfileMutation.mutate(userData)
+        // Combine userData with selectedImage for the mutation
+        updateProfileMutation.mutate({ ...userData, profilePhoto: selectedImage });
     }
 
     const isValidPhoneNumber = useCallback((phone: string) => /^\+?[0-9\s\-()]{10,20}$/.test(phone), [])
+
 
     return (
         <div className="md:grid md:grid-cols-2 lg:grid-cols-9 gap-5 mb-32">
@@ -188,119 +200,159 @@ export default function PersonalDetailsCard() {
                     <CardHeader>
                         <CardTitle className="text-xl">Personal Details</CardTitle>
                     </CardHeader>
-                    <CardContent className="space-y-2">
-                        {/* Full Name */}
-                        <div className="flex items-center space-x-3 bg-[#F9FAFB] px-4 py-3 rounded-md">
-                            <BiUser className="h-7 w-7 text-[#737373]" />
-                            <div className="flex-1">
-                                <p className="text-xs text-[#737373]">Full Name</p>
-                                {editingField === "fullName" ? (
-                                    <div className="flex space-x-2">
-                                        <Input
-                                            value={tempValue}
-                                            onChange={(e) => setTempValue(e.target.value)}
-                                            className="flex-1 text-sm font-medium text-[#000000]"
-                                        />
-                                        <Button size="sm" onClick={() => handleSave("fullName")}>
-                                            Save
-                                        </Button>
-                                        <Button size="sm" variant="outline" onClick={handleCancel}>
-                                            Cancel
-                                        </Button>
+                    {
+                        userLoading ? (
+                            <CardContent className="space-y-4 animate-pulse">
+                                {/* Full Name Skeleton */}
+                                <div className="flex items-center space-x-3 bg-[#F9FAFB] px-4 py-3 rounded-md">
+                                    <div className="h-7 w-7 bg-gray-300 rounded-full" />
+                                    <div className="flex-1 space-y-2">
+                                        <div className="w-24 h-3 bg-gray-300 rounded" />
+                                        <div className="w-full h-5 bg-gray-200 rounded" />
                                     </div>
-                                ) : (
-                                    <div className="flex items-center justify-between">
-                                        <p className="text-sm font-medium">{userData?.fullName}</p>
-                                        <Button variant="ghost" size="icon" onClick={() => handleEdit("fullName", userData?.fullName)}>
-                                            <Pencil className="h-4 w-4" />
-                                        </Button>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-
-                        {/* Email */}
-                        <div className="flex items-center space-x-3 bg-[#F9FAFB] px-4 py-3 rounded-md">
-                            <Mail className="h-7 w-7 text-[#737373]" />
-                            <div className="flex-1">
-                                <p className="text-xs text-[#737373]">Email Address</p>
-                                <div className="flex items-center justify-between">
-                                    <p className="text-sm font-medium">{userData?.email}</p>
-                                    <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">Not editable</span>
                                 </div>
-                            </div>
-                        </div>
 
+                                {/* Email Skeleton */}
+                                <div className="flex items-center space-x-3 bg-[#F9FAFB] px-4 py-3 rounded-md">
+                                    <div className="h-7 w-7 bg-gray-300 rounded-full" />
+                                    <div className="flex-1 space-y-2">
+                                        <div className="w-28 h-3 bg-gray-300 rounded" />
+                                        <div className="w-full h-5 bg-gray-200 rounded" />
+                                    </div>
+                                </div>
 
-                        {/* Password */}
-                        <div className="flex items-center space-x-3 bg-[#F9FAFB] px-4 py-3 rounded-md">
-                            <Lock className="h-7 w-7 text-[#737373]" />
-                            <div className="flex-1">
-                                <p className="text-sm text-[#737373]">Password</p>
-                                <div className="flex items-center justify-between">
-                                    <p>{userData?.password}</p>
-                                    <Dialog open={isPasswordDialogOpen} onOpenChange={setIsPasswordDialogOpen}>
-                                        <DialogTrigger asChild>
-                                            <Button variant="secondary" size="sm">
-                                                Change
-                                            </Button>
-                                        </DialogTrigger>
-                                        <DialogContent>
-                                            <DialogHeader>
-                                                <DialogTitle>Change Password</DialogTitle>
-                                                <DialogDescription>Enter your old and new passwords below.</DialogDescription>
-                                            </DialogHeader>
-                                            <div className="space-y-4 py-4">
-                                                <div className="space-y-2">
-                                                    <p className="text-sm">Old Password</p>
+                                {/* Password Skeleton */}
+                                <div className="flex items-center space-x-3 bg-[#F9FAFB] px-4 py-3 rounded-md">
+                                    <div className="h-7 w-7 bg-gray-300 rounded-full" />
+                                    <div className="flex-1 space-y-2">
+                                        <div className="w-24 h-3 bg-gray-300 rounded" />
+                                        <div className="w-1/3 h-5 bg-gray-200 rounded" />
+                                    </div>
+                                </div>
+
+                                {/* Save Button Skeleton */}
+                                <div className="flex justify-between pt-4">
+                                    <div className="w-32 h-10 bg-gray-300 rounded" />
+                                </div>
+                            </CardContent>
+                        )
+                            :
+                            (
+                                <CardContent className="space-y-2">
+                                    {/* Full Name */}
+                                    <div className="flex items-center space-x-3 bg-[#F9FAFB] px-4 py-3 rounded-md">
+                                        <BiUser className="h-7 w-7 text-[#737373]" />
+                                        <div className="flex-1">
+                                            <p className="text-xs text-[#737373]">Full Name</p>
+                                            {editingField === "fullName" ? (
+                                                <div className="flex space-x-2">
                                                     <Input
-                                                        type="password"
-                                                        value={oldPassword}
-                                                        onChange={(e) => setOldPassword(e.target.value)}
+                                                        value={tempValue}
+                                                        onChange={(e) => setTempValue(e.target.value)}
+                                                        className="flex-1 text-sm font-medium text-[#000000]"
                                                     />
+                                                    <Button size="sm" onClick={() => handleSave("fullName")}>
+                                                        Save
+                                                    </Button>
+                                                    <Button size="sm" variant="outline" onClick={handleCancel}>
+                                                        Cancel
+                                                    </Button>
                                                 </div>
-                                                <div className="space-y-2">
-                                                    <p className="text-sm">New Password</p>
-                                                    <Input
-                                                        type="password"
-                                                        value={newPassword}
-                                                        onChange={(e) => setNewPassword(e.target.value)}
-                                                    />
+                                            ) : (
+                                                <div className="flex items-center justify-between">
+                                                    <p className="text-sm font-medium">{userData?.fullName}</p>
+                                                    <Button variant="ghost" size="icon" onClick={() => handleEdit("fullName", userData?.fullName)}>
+                                                        <Pencil className="h-4 w-4" />
+                                                    </Button>
                                                 </div>
-                                                <div className="space-y-2">
-                                                    <p className="text-sm">Confirm New Password</p>
-                                                    <Input
-                                                        type="password"
-                                                        value={confirmPassword}
-                                                        onChange={(e) => setConfirmPassword(e.target.value)}
-                                                    />
-                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* Email */}
+                                    <div className="flex items-center space-x-3 bg-[#F9FAFB] px-4 py-3 rounded-md">
+                                        <Mail className="h-7 w-7 text-[#737373]" />
+                                        <div className="flex-1">
+                                            <p className="text-xs text-[#737373]">Email Address</p>
+                                            <div className="flex items-center justify-between">
+                                                <p className="text-sm font-medium">{userData?.email}</p>
+                                                <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">Not editable</span>
                                             </div>
-                                            <DialogFooter>
-                                                <Button variant="outline" onClick={() => setIsPasswordDialogOpen(false)}>
-                                                    Cancel
-                                                </Button>
-                                                <Button onClick={handlePasswordChange} disabled={resetPasswordMutation.isPending}>
-                                                    {resetPasswordMutation.isPending ? "Updating..." : "Update Password"}
-                                                </Button>
-                                            </DialogFooter>
-                                        </DialogContent>
-                                    </Dialog>
-                                </div>
-                            </div>
-                        </div>
+                                        </div>
+                                    </div>
 
-                        {/* Save button */}
-                        <div className="flex justify-between pt-4">
-                            <Button
-                                className="bg-green-600 hover:bg-green-700"
-                                onClick={handleSaveChanges}
-                                disabled={updateProfileMutation.isPending}
-                            >
-                                {updateProfileMutation.isPending ? "Saving..." : "Save Changes"}
-                            </Button>
-                        </div>
-                    </CardContent>
+
+                                    {/* Password */}
+                                    <div className="flex items-center space-x-3 bg-[#F9FAFB] px-4 py-3 rounded-md">
+                                        <Lock className="h-7 w-7 text-[#737373]" />
+                                        <div className="flex-1">
+                                            <p className="text-sm text-[#737373]">Password</p>
+                                            <div className="flex items-center justify-between">
+                                                <p>{userData?.password}</p>
+                                                <Dialog open={isPasswordDialogOpen} onOpenChange={setIsPasswordDialogOpen}>
+                                                    <DialogTrigger asChild>
+                                                        <Button variant="secondary" size="sm">
+                                                            Change
+                                                        </Button>
+                                                    </DialogTrigger>
+                                                    <DialogContent>
+                                                        <DialogHeader>
+                                                            <DialogTitle>Change Password</DialogTitle>
+                                                            <DialogDescription>Enter your old and new passwords below.</DialogDescription>
+                                                        </DialogHeader>
+                                                        <div className="space-y-4 py-4">
+                                                            <div className="space-y-2">
+                                                                <p className="text-sm">Old Password</p>
+                                                                <Input
+                                                                    type="password"
+                                                                    value={oldPassword}
+                                                                    onChange={(e) => setOldPassword(e.target.value)}
+                                                                />
+                                                            </div>
+                                                            <div className="space-y-2">
+                                                                <p className="text-sm">New Password</p>
+                                                                <Input
+                                                                    type="password"
+                                                                    value={newPassword}
+                                                                    onChange={(e) => setNewPassword(e.target.value)}
+                                                                />
+                                                            </div>
+                                                            <div className="space-y-2">
+                                                                <p className="text-sm">Confirm New Password</p>
+                                                                <Input
+                                                                    type="password"
+                                                                    value={confirmPassword}
+                                                                    onChange={(e) => setConfirmPassword(e.target.value)}
+                                                                />
+                                                            </div>
+                                                        </div>
+                                                        <DialogFooter>
+                                                            <Button variant="outline" onClick={() => setIsPasswordDialogOpen(false)}>
+                                                                Cancel
+                                                            </Button>
+                                                            <Button onClick={handlePasswordChange} disabled={resetPasswordMutation.isPending}>
+                                                                {resetPasswordMutation.isPending ? "Updating..." : "Update Password"}
+                                                            </Button>
+                                                        </DialogFooter>
+                                                    </DialogContent>
+                                                </Dialog>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Save button */}
+                                    <div className="flex justify-between pt-4">
+                                        <Button
+                                            className="bg-green-600 hover:bg-green-700"
+                                            onClick={handleSaveChanges}
+                                            disabled={updateProfileMutation.isPending}
+                                        >
+                                            {updateProfileMutation.isPending ? "Saving..." : "Save Changes"}
+                                        </Button>
+                                    </div>
+                                </CardContent>
+                            )
+                    }
                 </Card>
 
                 <div>

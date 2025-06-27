@@ -1,6 +1,6 @@
 "use client"
 
-import { useRef, useEffect, useState, useCallback } from "react"
+import { useRef, useEffect, useState, useCallback, useMemo } from "react" // Import useMemo
 import * as echarts from "echarts"
 import { useTheme } from "next-themes"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -15,6 +15,7 @@ interface Stock {
     name: string
     color: string
     visible: boolean
+    price: number
 }
 
 // Define data point structure
@@ -26,21 +27,45 @@ interface DataPoint {
 // Define time period
 type TimePeriod = "3m" | "6m" | "1y" | "YTD" | "3y" | "5y"
 
-export default function PerformanceCoverage() {
+// Props interface for the component
+interface PerformanceCoverageProps {
+    similarStockApiResponse?: {
+        similarStocks: Array<{
+            ticker: string
+            companyName: string
+            price: string
+            marketCap: string
+            peRatio: string
+            yearlyGain: string
+            analystConsensus: string
+            analystPriceTarget: string
+            topAnalystPriceTarget: string
+        }>
+        chartData: {
+            labels: string[]
+            rawPriceChart: Array<{
+                label: string
+                data: number[]
+            }>
+            percentReturnChart: Array<{
+                label: string
+                data: string[]
+            }>
+        }
+    }
+}
+
+export default function PerformanceCoverage({ similarStockApiResponse }: PerformanceCoverageProps) {
     const chartRef = useRef<HTMLDivElement>(null)
     const chartInstance = useRef<echarts.ECharts | null>(null)
     const { theme } = useTheme()
     const [isClient, setIsClient] = useState(false)
 
-    // Available stocks
-    const [stocks, setStocks] = useState<Stock[]>([
-        { id: "AAPL", name: "Apple", color: "#2695FF", visible: true },
-        { id: "AMZN", name: "Amazon", color: "#28A745", visible: true },
-        { id: "GOOGL", name: "Alphabet Class A", color: "#0E3A18", visible: true },
-        { id: "INTC", name: "Intel", color: "#FFD700", visible: true },
-        { id: "MSFT", name: "Microsoft", color: "#ff5733", visible: true },
-        { id: "NVDA", name: "Nvidia", color: "#594B00", visible: true },
-    ])
+    // Color palette for different stocks - Memoized
+    const stockColors = useMemo(() => ["#2695FF", "#28A745", "#0E3A18", "#FFD700", "#ff5733", "#594B00"], [])
+
+    // Available stocks - dynamically created from API data
+    const [stocks, setStocks] = useState<Stock[]>([])
 
     // State for selected time period
     const [period, setPeriod] = useState<TimePeriod>("1y")
@@ -51,131 +76,105 @@ export default function PerformanceCoverage() {
     /* eslint-disable @typescript-eslint/no-explicit-any */
     const [stockTableData, setStockTableData] = useState<any[]>([])
 
-    // Generate dummy data based on selected time period
-    const generateData = useCallback((period: TimePeriod): DataPoint[] => {
-        const data: DataPoint[] = []
-        let days: number
-
-        switch (period) {
-            case "3m":
-                days = 90
-                break
-            case "6m":
-                days = 180
-                break
-            case "1y":
-                days = 365
-                break
-            case "YTD":
-                const now = new Date()
-                const startOfYear = new Date(now.getFullYear(), 0, 1)
-                days = Math.floor((now.getTime() - startOfYear.getTime()) / (1000 * 60 * 60 * 24))
-                break
-            case "3y":
-                days = 365 * 3
-                break
-            case "5y":
-                days = 365 * 5
-                break
-            default:
-                days = 365
+    // Initialize stocks from API data
+    useEffect(() => {
+        if (similarStockApiResponse?.similarStocks) {
+            const apiStocks = similarStockApiResponse.similarStocks.map((stock, index) => ({
+                id: stock.ticker,
+                name: stock.companyName,
+                color: stockColors[index % stockColors.length],
+                visible: true,
+                price: Number.parseFloat(stock.price),
+            }))
+            setStocks(apiStocks)
         }
+    }, [similarStockApiResponse, stockColors]) // stockColors is now stable due to useMemo
 
-        // Use a fixed seed for random number generation to ensure consistency
-        const seedrandom = (seed: number) => {
-            return () => {
-                seed = (seed * 9301 + 49297) % 233280
-                return seed / 233280
-            }
-        }
+    // Process API data based on selected time period
+    const processApiData = useCallback(
+        (period: TimePeriod): DataPoint[] => {
+            if (!similarStockApiResponse?.chartData) return []
 
-        // Generate data points
-        const endDate = new Date()
-        const random = seedrandom(period === "1y" ? 12345 : 67890)
+            const { labels, percentReturnChart } = similarStockApiResponse.chartData
+            const data: DataPoint[] = []
 
-        // Increase the number of data points for smoother lines
-        const numPoints = Math.min(days, 100) // Cap at 100 points for performance
-        const step = days / numPoints
+            // Calculate how many data points to show based on period
+            let dataPoints: number
+            const totalPoints = labels.length
 
-        for (let i = 0; i <= numPoints; i++) {
-            const dayOffset = Math.floor(i * step)
-            const date = new Date(endDate)
-            date.setDate(date.getDate() - (days - dayOffset))
-
-            const dataPoint: DataPoint = {
-                date: date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "2-digit" }),
+            switch (period) {
+                case "3m":
+                    dataPoints = Math.min(65, totalPoints) // ~3 months of trading days
+                    break
+                case "6m":
+                    dataPoints = Math.min(130, totalPoints) // ~6 months of trading days
+                    break
+                case "1y":
+                    dataPoints = Math.min(252, totalPoints) // ~1 year of trading days
+                    break
+                case "YTD":
+                    // Calculate from start of current year
+                    const currentYear = new Date().getFullYear()
+                    const startOfYearIndex = labels.findIndex((label) => label.startsWith(currentYear.toString()))
+                    dataPoints = startOfYearIndex >= 0 ? totalPoints - startOfYearIndex : totalPoints
+                    break
+                case "3y":
+                    dataPoints = Math.min(756, totalPoints) // ~3 years of trading days
+                    break
+                case "5y":
+                    dataPoints = totalPoints // All available data
+                    break
+                default:
+                    dataPoints = Math.min(252, totalPoints)
             }
 
-            // Generate deterministic performance values for each stock
-            stocks.forEach((stock) => {
-                // Base value is between -50 and 50
-                let baseValue: number
+            // Get the last N data points
+            const startIndex = Math.max(0, totalPoints - dataPoints)
+            const selectedLabels = labels.slice(startIndex)
 
-                switch (stock.id) {
-                    case "AAPL":
-                        baseValue = 25 + random() * 20
-                        break // AAPL performs well
-                    case "NVDA":
-                        baseValue = 30 + random() * 20
-                        break // NVDA performs well
-                    case "GOOGL":
-                        baseValue = 15 + random() * 15
-                        break // GOOGL moderate positive
-                    case "AMZN":
-                        baseValue = 20 + random() * 15
-                        break // AMZN good performance
-                    case "MSFT":
-                        baseValue = 5 + random() * 10
-                        break // MSFT slight positive
-                    case "INTC":
-                        baseValue = -30 + random() * 30
-                        break // INTC struggles
-                    default:
-                        baseValue = random() * 30
+            // Process each data point
+            selectedLabels.forEach((label, index) => {
+                const actualIndex = startIndex + index
+                const dataPoint: DataPoint = {
+                    date: new Date(label).toLocaleDateString("en-US", {
+                        month: "short",
+                        day: "numeric",
+                        year: "2-digit",
+                    }),
                 }
 
-                // Add some volatility based on the day, but limit extreme changes
-                const volatility = Math.sin(dayOffset / 20) * 5 // Reduced volatility
-                dataPoint[stock.id] = Number.parseFloat((baseValue + volatility).toFixed(2))
+                // Add data for each stock
+                percentReturnChart.forEach((stockData) => {
+                    if (actualIndex < stockData.data.length) {
+                        dataPoint[stockData.label] = Number.parseFloat(stockData.data[actualIndex])
+                    }
+                })
+
+                data.push(dataPoint)
             })
 
-            data.push(dataPoint)
-        }
-
-        // Post-process to smooth out any extreme jumps
-        for (let i = 1; i < data.length - 1; i++) {
-            stocks.forEach((stock) => {
-                const prev = data[i - 1][stock.id] as number
-                const current = data[i][stock.id] as number
-                const next = data[i + 1][stock.id] as number
-
-                // If there's a sharp spike (much higher than both neighbors), smooth it
-                if ((current > prev * 1.5 && current > next * 1.5) || (current < prev * 0.5 && current < next * 0.5)) {
-                    data[i][stock.id] = Number.parseFloat(((prev + next) / 2).toFixed(2))
-                }
-            })
-        }
-
-        return data
-    }, [stocks])
+            return data
+        },
+        [similarStockApiResponse],
+    )
 
     // Calculate latest values and changes for the table
     const getStockTableData = useCallback(
         (data: DataPoint[]) => {
-            if (data.length < 2) return []
+            if (data.length < 2 || stocks.length === 0) return []
 
             const latest = data[data.length - 1]
             const previous = data[data.length - 2]
 
             return stocks.map((stock) => {
-                const currentValue = latest[stock.id] as number
-                const previousValue = previous[stock.id] as number
+                const currentValue = (latest[stock.id] as number) || 0
+                const previousValue = (previous[stock.id] as number) || 0
                 const change = Number.parseFloat((currentValue - previousValue).toFixed(2))
-                const percentChange = Number.parseFloat(((change / Math.abs(previousValue)) * 100).toFixed(2))
+                const percentChange =
+                    previousValue !== 0 ? Number.parseFloat(((change / Math.abs(previousValue)) * 100).toFixed(2)) : 0
 
                 return {
                     ...stock,
-                    price: 214.0, // Dummy fixed price for now
                     change,
                     percentChange,
                 }
@@ -197,12 +196,10 @@ export default function PerformanceCoverage() {
                         backgroundColor: "#6a7985",
                     },
                 },
-
                 /* eslint-disable @typescript-eslint/no-explicit-any */
                 formatter: (params: any) => {
                     const date = params[0].axisValue
                     let html = `<div style="margin-bottom: 5px;">${date}</div>`
-
                     params.forEach((param: any) => {
                         const stock = stocks.find((s) => s.id === param.seriesName)
                         if (!stock) return
@@ -210,17 +207,12 @@ export default function PerformanceCoverage() {
                         const color = stock.color
                         const value = param.value.toFixed(2)
 
-                        // Use a deterministic approach for the change percentage
-                        const change = "+" + ((Math.abs(param.value) * 0.1) % 20).toFixed(2) + "%"
-
                         html += `<div style="display: flex; justify-content: space-between; align-items: center; margin: 3px 0;">
               <span style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background-color: ${color}; margin-right: 5px;"></span>
               <span style="margin-right: 15px;">${stock.name}</span>
               <span>${value}%</span>
-              <span style="color: green; margin-left: 10px;">${change}</span>
             </div>`
                     })
-
                     return html
                 },
             },
@@ -247,7 +239,6 @@ export default function PerformanceCoverage() {
                 },
                 axisLabel: {
                     color: theme === "dark" ? "#ccc" : "#666",
-                    // Responsive font size and rotation for small screens
                     fontSize: window.innerWidth < 768 ? 10 : 12,
                     rotate: window.innerWidth < 768 ? 30 : 0,
                 },
@@ -260,7 +251,6 @@ export default function PerformanceCoverage() {
                 axisLabel: {
                     color: theme === "dark" ? "#ccc" : "#666",
                     formatter: "{value}%",
-                    // Responsive font size for small screens
                     fontSize: window.innerWidth < 768 ? 10 : 12,
                 },
                 splitLine: {
@@ -268,8 +258,6 @@ export default function PerformanceCoverage() {
                         color: theme === "dark" ? "#333" : "#eee",
                     },
                 },
-                min: -50,
-                max: 50,
             },
             series: stocks
                 .filter((stock) => stock.visible)
@@ -277,8 +265,7 @@ export default function PerformanceCoverage() {
                     name: stock.id,
                     type: "line",
                     data: data.map((item) => item[stock.id]),
-                    smooth: 0.2, // Reduced smoothness to prevent sharp spikes
-                    smoothMonotone: "x", // Ensures the curve is monotonic in x direction
+                    smooth: 0.2,
                     showSymbol: false,
                     lineStyle: {
                         width: 2,
@@ -288,33 +275,26 @@ export default function PerformanceCoverage() {
                         color: stock.color,
                     },
                     connectNulls: true,
-                    sampling: "average", // Use average sampling for large datasets
+                    sampling: "average",
                 })),
         }
 
-        chartInstance.current.setOption(option, true) // Force update
+        chartInstance.current.setOption(option, true)
     }, [data, stocks, theme])
 
     // Initialize data on client-side only
     useEffect(() => {
         setIsClient(true)
-        const generatedData = generateData(period)
-        setData(generatedData)
-        setStockTableData(getStockTableData(generatedData))
+    }, [])
 
-
-
-
-    }, [generateData, getStockTableData, period]) // Empty dependency array means this runs once on mount
-
-    // Update data when period changes (client-side only)
+    // Update data when period changes or API data is available
     useEffect(() => {
-        if (isClient) {
-            const generatedData = generateData(period)
-            setData(generatedData)
-            setStockTableData(getStockTableData(generatedData))
+        if (isClient && similarStockApiResponse) {
+            const processedData = processApiData(period)
+            setData(processedData)
+            setStockTableData(getStockTableData(processedData))
         }
-    }, [period, isClient, generateData, getStockTableData])
+    }, [period, isClient, processApiData, getStockTableData, similarStockApiResponse])
 
     // Toggle stock visibility
     const toggleStockVisibility = useCallback((stockId: string) => {
@@ -341,11 +321,9 @@ export default function PerformanceCoverage() {
             if (!chartInstance.current) {
                 chartInstance.current = echarts.init(chartRef.current)
             }
-
             updateChart()
         }
 
-        // Cleanup function
         return () => {
             if (chartInstance.current) {
                 chartInstance.current.dispose()
@@ -361,7 +339,6 @@ export default function PerformanceCoverage() {
         const handleResize = () => {
             if (chartInstance.current) {
                 chartInstance.current.resize()
-                // Update chart options for responsive design
                 updateChart()
             }
         }
@@ -372,6 +349,22 @@ export default function PerformanceCoverage() {
             window.removeEventListener("resize", handleResize)
         }
     }, [isClient, updateChart])
+
+    // Show loading state if no data
+    if (!similarStockApiResponse || stocks.length === 0) {
+        return (
+            <Card className="w-full shadow-[0px_0px_10px_1px_#0000001A]">
+                <CardHeader>
+                    <CardTitle className="text-xl sm:text-2xl">Performance Comparison</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <div className="flex items-center justify-center p-8">
+                        <div className="h-8 w-8 animate-spin rounded-full border-2 border-gray-300 border-t-green-500"></div>
+                    </div>
+                </CardContent>
+            </Card>
+        )
+    }
 
     return (
         <Card className="w-full shadow-[0px_0px_10px_1px_#0000001A]">
@@ -389,9 +382,7 @@ export default function PerformanceCoverage() {
                 </Tabs>
             </CardHeader>
             <CardContent>
-                {/* Responsive height based on screen size */}
                 <div ref={chartRef} className="w-full h-[300px] sm:h-[400px] md:h-[500px]" />
-
                 {isClient ? (
                     <div className="mt-6 overflow-x-auto">
                         <Table className="border-none">
@@ -427,12 +418,16 @@ export default function PerformanceCoverage() {
                                             </Badge>
                                         </TableCell>
                                         <TableCell className="hidden sm:table-cell border-r-0 text-center">{stock.name}</TableCell>
-                                        <TableCell className="border-r-0 text-center">{stock.price.toFixed(2)}</TableCell>
-                                        <TableCell className={`border-r-0 text-center ${stock.change >= 0 ? "text-green-600" : "text-red-600"}`}>
+                                        <TableCell className="border-r-0 text-center">${stock.price.toFixed(2)}</TableCell>
+                                        <TableCell
+                                            className={`border-r-0 text-center ${stock.change >= 0 ? "text-green-600" : "text-red-600"}`}
+                                        >
                                             {stock.change >= 0 ? "+" : ""}
-                                            {stock.change.toFixed(2)}
+                                            {stock.change.toFixed(2)}%
                                         </TableCell>
-                                        <TableCell className={`text-center border-r-0 ${stock.percentChange >= 0 ? "text-green-600" : "text-red-600"}`}>
+                                        <TableCell
+                                            className={`text-center border-r-0 ${stock.percentChange >= 0 ? "text-green-600" : "text-red-600"}`}
+                                        >
                                             {stock.percentChange >= 0 ? "+" : ""}
                                             {stock.percentChange.toFixed(2)}%
                                         </TableCell>

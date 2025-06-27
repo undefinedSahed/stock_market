@@ -8,6 +8,7 @@ import { useSession } from "next-auth/react"
 import { useEffect } from "react"
 import { usePortfolio } from "../portfolioContext"
 import Image from "next/image"
+import { Loader2 } from "lucide-react"
 
 interface StockListProps {
     onSelectStock: (symbol: string) => void
@@ -37,7 +38,7 @@ export default function StockList({ onSelectStock, selectedStock }: StockListPro
         enabled: !!session?.user?.accessToken && !!selectedPortfolioId,
     });
 
-    const { mutate: getOverview, data: overviewData } = useMutation({
+    const { mutate: getOverview, data: overviewData, isPending: isHoldingLoading } = useMutation({
         mutationFn: async () => {
             const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/portfolio/overview`, {
                 method: "POST",
@@ -73,45 +74,50 @@ export default function StockList({ onSelectStock, selectedStock }: StockListPro
             </CardHeader>
             <CardContent className="p-0">
                 <ScrollArea className="h-[440px]">
-                    <div className="space-y-1 p-4 pt-0">
-                        {/* Ensure overviewData exists before mapping */}
-                        {overviewData?.holdings?.map((stock: { symbol: string, quantity: number, _id: string, price: number, change: number, percent: number, logo: string }) => (
-                            <div
-                                key={stock._id}
-                                className={`flex cursor-pointer items-center justify-between rounded-md p-2 hover:bg-muted ${selectedStock === stock.symbol ? "bg-muted" : ""
-                                    }`}
-                                onClick={() => onSelectStock(stock.symbol)}
-                            >
-                                <div className="flex items-center gap-2">
-                                    <div className="relative flex h-6 w-8 items-center justify-center rounded bg-blue-100 text-xs text-blue-600">
-                                        <Image
-                                            src={stock.logo}
-                                            alt={stock.symbol}
-                                            width={350}
-                                            height={200}
-                                            className="object-cover"
-                                        />
-                                    </div>
-                                    <div>
-                                        <div className="text-sm font-medium">{stock.symbol}</div>
-                                    </div>
-                                </div>
-                                <div className="text-right">
-                                    <div className="text-sm font-medium">${stock.price.toFixed(2)}</div>
-                                    <div className={`text-xs ${stock.change >= 0 ? "text-emerald-500" : "text-red-500"}`}>
-                                        {stock.change >= 0 ? "+" : ""}
-                                        {stock.change.toFixed(2)} ({stock.change >= 0 ? "+" : ""}
-                                        {stock.percent.toFixed(2)}%)
-                                    </div>
-                                </div>
+                    {
+                        isHoldingLoading ? (
+                            <div className="flex justify-center items-center h-full">
+                                <Loader2 className="animate-spin h-10 w-10 text-green-500" />
                             </div>
-                        ))}
-                        {!overviewData?.holdings?.length && (
-                            <div className="p-4 text-center text-muted-foreground">
-                                No stocks in this portfolio yet.
-                            </div>
-                        )}
-                    </div>
+                        )
+                            :
+                            (
+                                <div className="space-y-1 p-4 pt-0">
+                                    {/* Ensure overviewData exists before mapping */}
+                                    {overviewData?.holdings?.map((stock: { symbol: string, quantity: number, _id: string, price: number, change: number, percent: number, logo: string }) => (
+                                        <div
+                                            key={stock._id}
+                                            className={`flex cursor-pointer items-center justify-between rounded-md p-2 hover:bg-muted ${selectedStock === stock.symbol ? "bg-muted" : ""
+                                                }`}
+                                            onClick={() => onSelectStock(stock.symbol)}
+                                        >
+                                            <div className="flex items-center gap-2">
+                                                <div className="relative flex h-6 w-8 items-center justify-center rounded bg-blue-100 text-xs text-blue-600">
+                                                    <Image
+                                                        src={stock.logo}
+                                                        alt={stock.symbol}
+                                                        width={350}
+                                                        height={200}
+                                                        className="object-cover"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <div className="text-sm font-medium">{stock.symbol}</div>
+                                                </div>
+                                            </div>
+                                            <div className="text-right">
+                                                <div className="text-sm font-medium">${stock.price.toFixed(2)}</div>
+                                                <div className={`text-xs ${stock.change >= 0 ? "text-emerald-500" : "text-red-500"}`}>
+                                                    {stock.change >= 0 ? "+" : ""}
+                                                    {stock.change.toFixed(2)} ({stock.change >= 0 ? "+" : ""}
+                                                    {stock.percent.toFixed(2)}%)
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )
+                    }
                 </ScrollArea>
             </CardContent>
         </Card>

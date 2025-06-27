@@ -9,6 +9,7 @@ import StockPremiumBanner from "./chart-bottom";
 import { usePortfolio } from "../portfolioContext";
 import { useSession } from "next-auth/react";
 import { useQuery } from "@tanstack/react-query";
+import { Loader2 } from "lucide-react";
 
 // Define interfaces
 interface PortfolioStock {
@@ -95,8 +96,8 @@ export default function ChartPage() {
     // Loading State
     if (isPortfolioLoading && !initialLoadComplete) {
         return (
-            <main className="flex min-h-screen items-center justify-center">
-                <div className="text-xl text-gray-500">Loading portfolio...</div>
+            <main className="flex lg:w-[80vw] min-h-[75vh] items-center justify-center">
+                <Loader2 className="animate-spin w-16 h-16 text-green-500"/>
             </main>
         );
     }
