@@ -264,6 +264,8 @@ export default function Home() {
     }
   }, [overviewData?.cash]);
 
+  console.log(overviewData)
+
   return (
     <div className="flex flex-col ">
       {/* Action Buttons */}
@@ -293,7 +295,12 @@ export default function Home() {
                 </div>
 
                 <div className="py-3 text-center">
-                  <h1 className="text-[40px] text-[#595959] font-bold">${overviewData?.totalValueWithCash}</h1>
+                  <h1 className="text-[40px] text-[#595959] font-bold">
+                    {`$${Number(overviewData?.totalValueWithCash)?.toLocaleString("en-US", {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })}`}
+                  </h1>
                 </div>
 
                 <div className="text-sm text-gray-600 mt-4 text-center">

@@ -202,11 +202,11 @@ const SearchResult = () => {
               </div>
 
               <div className=" w-1/3 flex justify-end">
-                <a href="#deep-research">
+                <Link href={`/deep-research/${query}`}>
                   <button className="bg-green-500 text-white font-semibold px-3 py-2 rounded-lg">
                     Deep Research
                   </button>
-                </a>
+                </Link>
               </div>
 
               <div className="w-1/3 flex justify-end">

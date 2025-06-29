@@ -54,7 +54,7 @@ const MyPortfolio = () => {
   }
 
   // After query is finished and portfolioData is still nullish
-  if (isQueryEnabled && isFetched && portfolioData.length === 0) {
+  if (isQueryEnabled && isFetched && portfolioData?.length === 0) {
     return (
       <div className="w-[80vw] flex justify-center items-center h-[80vh]">
         <div className="text-center">

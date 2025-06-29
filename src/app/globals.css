@@ -13,6 +13,9 @@
   }
 }
 
+.ql-container {
+  min-height: 300px !important; /* or 400px as needed */
+}
 
 
 @layer base {

@@ -24,6 +24,8 @@ import {
 import Link from "next/link";
 import { IoIosNotificationsOutline } from "react-icons/io";
 import { toast } from "sonner";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 
 type Stock = {
   symbol: string;
@@ -50,6 +52,10 @@ const columnHelper = createColumnHelper<Stock>();
 
 export default function StockTable() {
   const [sorting, setSorting] = useState<SortingState>([]);
+  const router = useRouter();
+  const session = useSession();
+
+  const userStatus = session?.status;
 
   // API calling
   const axiosInstance = useAxios();
@@ -78,10 +84,11 @@ export default function StockTable() {
   });
 
   const handleWatchlist = async (rowData: Stock) => {
+    if (userStatus === "unauthenticated") {
+      return router.push("/login");
+    }
     await mutateAsync(rowData);
   };
-
-  console.log(qualityStock);
 
   const columns = useMemo(
     () => [

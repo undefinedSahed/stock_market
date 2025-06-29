@@ -22,6 +22,7 @@ interface NewsFormData {
   newsTitle: string;
   newsDescription: string;
   imageLink: string;
+  isPaid: "true" | "false";
 }
 
 const Page = () => {
@@ -167,6 +168,7 @@ const Page = () => {
       formData.append("newsDescription", data.newsDescription);
       formData.append("imageLink", image.file);
       formData.append("source", "deep-research");
+      formData.append("isPaid", data.isPaid);
 
       await mutateAsync(formData);
     } catch (error) {
@@ -215,7 +217,7 @@ const Page = () => {
             className="bg-[#28a745] py-3 px-5 rounded-lg text-white font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isPending
-              ? "Uploading image..."
+              ? "Saving..."
               : isPending
               ? language === "ar"
                 ? "جاري الحفظ..."
@@ -235,6 +237,31 @@ const Page = () => {
         >
           <div>
             <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-700">
+                  {language === "ar" ? "حالة البحث *" : "Research Status *"}
+                </label>
+                <select
+                  {...register("isPaid", { required: true })}
+                  className="border p-4 rounded-lg bg-inherit outline-none w-full border-[#b0b0b0]"
+                  dir={language === "ar" ? "rtl" : "ltr"}
+                >
+                  <option value="false">
+                    {language === "ar" ? "مجاني" : "Free"}
+                  </option>
+                  <option value="true">
+                    {language === "ar" ? "مدفوع" : "Paid"}
+                  </option>
+                </select>
+                {errors.isPaid && (
+                  <p className="text-red-500 text-sm">
+                    {language === "ar"
+                      ? "يرجى تحديد حالة البحث"
+                      : "Please select research status"}
+                  </p>
+                )}
+              </div>
+
               <div className="space-y-2">
                 <label
                   htmlFor="stocksName"

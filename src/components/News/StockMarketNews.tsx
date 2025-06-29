@@ -18,7 +18,7 @@ interface StockMarketNewsProps {
 }
 
 export default function StockMarketNews({ allNews }: StockMarketNewsProps) {
-  const [moreStockNews, setMoreStockNews] = useState(3);
+  const [moreStockNews, setMoreStockNews] = useState(9);
 
   const visibleNews = allNews.slice(0, moreStockNews);
 

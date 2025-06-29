@@ -4,7 +4,7 @@ import PathTracker from "../_components/PathTracker"
 
 import { useState } from "react"
 import { Pencil, Trash2 } from "lucide-react"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Avatar, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
@@ -16,7 +16,7 @@ import useAxios from "@/hooks/useAxios"
 
 interface Influencer {
   _id: string
-  userName: string
+  fullName: string
   email: string
   phoneNumber: string
   role: string
@@ -47,7 +47,7 @@ const Page = () => {
   const [selectedInfluencer, setSelectedInfluencer] = useState<Influencer | null>(null)
   const [editForm, setEditForm] = useState({
     id: "",
-    userName: "",
+    fullName: "",
     email: "",
     phoneNumber: "",
     address: "",
@@ -99,7 +99,7 @@ const Page = () => {
     setSelectedInfluencer(influencer)
     setEditForm({
       id : influencer._id,
-      userName: influencer.userName,
+      fullName: influencer.fullName,
       email: influencer.email,
       phoneNumber: influencer.phoneNumber,
       address: influencer.address,
@@ -173,10 +173,9 @@ const Page = () => {
                 <TableRow key={influencer._id} className="border-b border-[#b0b0b0]">
                   <TableCell className="flex items-center gap-3 py-4 border-none">
                     <Avatar className="h-12 w-12 border border-gray-200">
-                      <AvatarImage src={`${influencer?.profilePhoto}`} alt={influencer.userName} />
-                      <AvatarFallback>{influencer.userName.charAt(0).toUpperCase()}</AvatarFallback>
+                      <AvatarImage src={`${influencer?.profilePhoto}`} alt={influencer.fullName} />
                     </Avatar>
-                    <span className="font-medium">{influencer.userName}</span>
+                    <span className="font-medium">{influencer.fullName}</span>
                   </TableCell>
                   <TableCell className="border-none">{influencer.phoneNumber}</TableCell>
                   <TableCell className="border-none">{influencer.email}</TableCell>
@@ -268,9 +267,9 @@ const Page = () => {
             <div className="grid gap-2">
               <Label htmlFor="userName">Username</Label>
               <Input
-                id="userName"
-                value={editForm.userName}
-                onChange={(e) => setEditForm({ ...editForm, userName: e.target.value })}
+                id="fullName"
+                value={editForm.fullName}
+                onChange={(e) => setEditForm({ ...editForm, fullName: e.target.value })}
               />
             </div>
             <div className="grid gap-2">
@@ -331,7 +330,7 @@ const Page = () => {
           </DialogHeader>
           <div className="py-4">
             <p>
-              Are you sure you want to delete <strong>{selectedInfluencer?.userName}</strong>? This action cannot be
+              Are you sure you want to delete <strong>{selectedInfluencer?.fullName}</strong>? This action cannot be
               undone.
             </p>
           </div>

@@ -11,17 +11,16 @@ import { useParams } from "next/navigation";
 
 const Page = () => {
   const axiosInstance = useAxios();
+  const params = useParams();
+  const stockName = params.stockName;
 
   const { data: allNews = [], isLoading } = useQuery({
     queryKey: ["overview-news"],
     queryFn: async () => {
-      const res = await axiosInstance("/admin/news/market-news");
+      const res = await axiosInstance(`/admin/news/market-news?symbol=${stockName.toString().toUpperCase()}`);
       return res.data.data;
     },
   });
-
-  const params = useParams();
-  const stockName = params.stockName;
 
   if (isLoading)
     return (
@@ -35,7 +34,8 @@ const Page = () => {
       <div className="mt-8">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <h3 className="text-xl font-bold">
-            <span className=" uppercase">({stockName})</span> Stock News & Sentiment
+            <span className=" uppercase">({stockName})</span> Stock News &
+            Sentiment
           </h3>
 
           {/* <div className="flex flex-wrap gap-2 items-center">

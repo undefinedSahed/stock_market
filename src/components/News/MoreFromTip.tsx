@@ -3,6 +3,7 @@ import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 interface StockNewsItem {
   _id: string;
@@ -16,9 +17,10 @@ interface MoreFromTipProps {
 }
 
 export default function MoreFromTip({ stockNews } : MoreFromTipProps) {
-  const [moreStockNews, setMoreStockNews] = useState(3);
+  const [moreStockNews, setMoreStockNews] = useState(9);
 
   const visibleNews = stockNews.slice(0, moreStockNews);
+  const pathName = usePathname();
 
   const customSlice = () => {
     setMoreStockNews((prev) => prev + 3);
@@ -32,7 +34,7 @@ export default function MoreFromTip({ stockNews } : MoreFromTipProps) {
 
   return (
     <div className="mb-[80px] container mx-auto">
-      <h1 className="text-[32px] font-semibold mb-6">More From Olive Stock</h1>
+      <h1 className="text-[32px] font-semibold mb-6">{pathName === "/news" ? "More From Olive Stock" : "Deep Research"}</h1>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {visibleNews.map((news : StockNewsItem) => (

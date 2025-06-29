@@ -1,6 +1,7 @@
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 interface NewsItem {
   _id: string;
@@ -20,9 +21,12 @@ export default function TipRanksLabs({
   leftSide1,
   leftSide2,
 }: TipRanksLabsProps) {
+
+  const pathName = usePathname();
+
   return (
     <div className="w-full mb-8 container mx-auto">
-      <h1 className="text-2xl font-bold mb-6">Olive Stock Labs</h1>
+      <h1 className="text-2xl font-bold mb-6">{pathName === "/news" ? "Olive Stock Labs" : "Deep Research"}</h1>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Main Article */}

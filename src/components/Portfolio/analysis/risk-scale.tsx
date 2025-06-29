@@ -10,25 +10,12 @@ export default function RiskScale({ myPosition, avgPosition }: RiskScaleProps) {
     const scalePositions = Array.from({ length: 10 }, (_, i) => i)
 
     // Determine colors for the scale
-    const getScaleColor = (position: number, isMyPosition: boolean, isAvgPosition: boolean) => {
-        let baseColor = ""
-
-        if (position < 3) {
-            baseColor = isMyPosition ? "bg-green-500" : "bg-green-100"
-        } else if (position < 5) {
-            baseColor = isMyPosition ? "bg-green-600" : "bg-green-300"
-        } else if (position < 7) {
-            baseColor = isMyPosition || isAvgPosition ? "bg-gray-600" : "bg-gray-300"
-        } else {
-            baseColor = isMyPosition ? "bg-red-400" : "bg-red-200"
-        }
-
-        // If it's the average position and not also my position, use a darker gray
-        if (isAvgPosition && !isMyPosition) {
-            baseColor = "bg-gray-600"
-        }
-
-        return baseColor
+    const getScaleColor = (position: number) => {
+        if (position <= 2) return "bg-green-500" // Green zone
+        if (position <= 4) return "bg-green-300" // Light green zone
+        if (position <= 6) return "bg-gray-400" // Gray zone
+        if (position <= 8) return "bg-red-300" // Light red zone
+        return "bg-red-500" // Red zone
     }
 
     return (
@@ -41,16 +28,19 @@ export default function RiskScale({ myPosition, avgPosition }: RiskScaleProps) {
             {/* Risk Scale */}
             <div className="grid grid-cols-10 gap-1 mb-1">
                 {scalePositions.map((pos) => (
-                    <div key={pos} className={`h-6 ${getScaleColor(pos, pos === myPosition, pos === avgPosition)}`} />
+                    <div
+                        key={pos}
+                        className={`h-6 ${getScaleColor(pos)}`}
+                    />
                 ))}
             </div>
 
             {/* Position Indicators */}
-            <div className="grid grid-cols-10 gap-1">
+            <div className="grid grid-cols-10 gap-1 relative h-12">
                 {scalePositions.map((pos) => (
-                    <div key={pos} className="flex flex-col items-center">
+                    <div key={pos} className="flex flex-col items-center relative">
                         {pos === myPosition && (
-                            <div className="flex flex-col items-center">
+                            <div className="flex flex-col items-center absolute top-0">
                                 <ArrowUp className="h-4 w-4 text-green-600" />
                                 <span className="text-xs text-center">
                                     My
@@ -60,10 +50,10 @@ export default function RiskScale({ myPosition, avgPosition }: RiskScaleProps) {
                             </div>
                         )}
                         {pos === avgPosition && (
-                            <div className="flex flex-col items-center">
+                            <div className="flex flex-col items-center absolute top-0">
                                 <ArrowUp className="h-4 w-4 text-gray-600" />
                                 <span className="text-xs text-center">
-                                    Avg. Olive Stock&apos;s
+                                    Avg.
                                     <br />
                                     Portfolio
                                 </span>

@@ -1,10 +1,28 @@
+"use client"
 import { EarningsChart } from "./_components/earnings-chart";
 import { MetricCard } from "./_components/metric-card";
 import PathTracker from "./_components/PathTracker";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { UsersChart } from "./_components/users-chart";
+import useAxios from "@/hooks/useAxios";
+import { useQuery } from "@tanstack/react-query";
 
-const page = () => {
+const Page = () => {
+
+  const axiosInstance = useAxios();
+
+  const {data : dashboardData} = useQuery({
+    queryKey : ["dashboard-data"],
+    queryFn : async () => {
+      const res = await axiosInstance(`/admin/dashboard`);
+      return res.data;
+    }
+  })
+
+  const earningsChart = dashboardData?.earningsChart;
+  const userChart = dashboardData?.userChart;
+
+
   return (
     <div>
       <div className="mb-8">
@@ -15,27 +33,19 @@ const page = () => {
         <div className="grid gap-6 md:grid-cols-4 mb-8">
           <MetricCard
             title="Total Earnings"
-            value="$75,000"
-            percentageChange={10}
-            changeValue="+$150 today"
+            value={dashboardData?.totalEarnings}
           />
           <MetricCard
             title="Total User"
-            value="22,300"
-            percentageChange={10}
-            changeValue="+200 today"
+            value={dashboardData?.totalUsers}
           />
           <MetricCard
             title="Paid User"
-            value="11,300"
-            percentageChange={10}
-            changeValue="+120 today"
+            value={dashboardData?.paidUsers}
           />
           <MetricCard
             title="Unpaid User"
-            value="11,300"
-            percentageChange={10}
-            changeValue="+120 today"
+            value={dashboardData?.unpaidUsers}
           />
         </div>
 
@@ -45,7 +55,7 @@ const page = () => {
               <CardTitle>Earnings</CardTitle>
             </CardHeader>
             <CardContent>
-              <EarningsChart />
+              <EarningsChart earningsChart={earningsChart} />
             </CardContent>
           </Card>
 
@@ -54,7 +64,7 @@ const page = () => {
               <CardTitle>User</CardTitle>
             </CardHeader>
             <CardContent>
-              <UsersChart />
+              <UsersChart userChart={userChart} />
             </CardContent>
           </Card>
         </div>
@@ -63,4 +73,4 @@ const page = () => {
   );
 };
 
-export default page;
+export default Page;

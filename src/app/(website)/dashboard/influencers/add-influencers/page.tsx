@@ -12,7 +12,7 @@ import { toast } from "sonner"
 import PathTracker from "../../_components/PathTracker"
 
 interface FormData {
-  userName: string
+  fullName: string
   phoneNumber: string
   email: string
   address: string
@@ -26,7 +26,7 @@ const Page = () => {
     formState: { errors, isSubmitting },
   } = useForm({
     defaultValues: {
-      userName: "",
+      fullName: "",
       phoneNumber: "",
       email: "",
       address: "",
@@ -117,7 +117,7 @@ const Page = () => {
       const formData = new FormData()
 
       // Append form fields
-      formData.append("userName", data.userName)
+      formData.append("fullName", data.fullName)
       formData.append("phoneNumber", data.phoneNumber)
       formData.append("email", data.email)
       formData.append("address", data.address)
@@ -160,12 +160,12 @@ const Page = () => {
                 </label>
                 <input
                   type="text"
-                  id="userName"
-                  {...register("userName", { required: "Name is required" })}
+                  id="fullName"
+                  {...register("fullName", { required: "Name is required" })}
                   className="w-full p-3 outline-none rounded-md bg-inherit border border-[#b0b0b0]"
                   placeholder="Enter Influencer Name"
                 />
-                {errors.userName && <p className="text-red-500 text-sm mt-1">{errors.userName.message}</p>}
+                {errors.fullName && <p className="text-red-500 text-sm mt-1">{errors.fullName.message}</p>}
               </div>
 
               <div>

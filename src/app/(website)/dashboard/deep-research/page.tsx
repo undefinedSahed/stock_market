@@ -27,6 +27,7 @@ import "react-quill/dist/quill.snow.css";
 
 interface News {
   _id: string;
+  isPaid: string;
   symbol: string;
   newsTitle: string;
   newsDescription: string;
@@ -262,7 +263,7 @@ const Page = () => {
   // Handle edit button click
   const handleEdit = (news: News) => {
     setSelectedNews(news);
-    setValue("stockName", news.symbol)
+    setValue("stockName", news.symbol);
     setValue("newsTitle", news.newsTitle);
     setValue("newsDescription", news.newsDescription);
     setValue("imageLink", news.imageLink || "");
@@ -284,7 +285,7 @@ const Page = () => {
     try {
       // Create FormData to send both form fields and image file
       const formData = new FormData();
-      formData.append("symbol", data.stockName)
+      formData.append("symbol", data.stockName);
       formData.append("newsTitle", data.newsTitle);
       formData.append("newsDescription", data.newsDescription);
       formData.append("tickers", data.tickers);
@@ -353,7 +354,7 @@ const Page = () => {
         <div className="flex items-center justify-center min-h-[400px]">
           <div className="text-center">
             <div className="text-lg text-gray-500 mb-4">No news available</div>
-            <Link href={"/dashboard/news/add-news"}>
+            <Link href={"/dashboard/deep-research/add-deep-research"}>
               <button className="bg-[#28a745] py-2 px-5 rounded-lg text-white font-semibold">
                 Create Your First News
               </button>
@@ -381,6 +382,7 @@ const Page = () => {
           <Table>
             <TableHeader>
               <TableRow className="border-b border-[#b0b0b0]">
+                <TableHead className="text-center">Status</TableHead>
                 <TableHead className="text-center">Stock&apos;s Name</TableHead>
                 <TableHead className="text-center">Title</TableHead>
                 <TableHead className="text-center">Description</TableHead>
@@ -392,6 +394,11 @@ const Page = () => {
             <TableBody>
               {currentPosts.map((news: News) => (
                 <TableRow key={news._id} className="border-b border-[#b0b0b0]">
+                  <TableCell className="border-none max-w-[200px]">
+                    <div className="font-medium">
+                      {news.isPaid ? "Paid" : "Free"}
+                    </div>
+                  </TableCell>
                   <TableCell className="border-none max-w-[200px]">
                     <div className="font-medium">{news.symbol}</div>
                   </TableCell>

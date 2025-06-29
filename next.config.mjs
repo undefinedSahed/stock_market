@@ -32,6 +32,17 @@ const nextConfig = {
         hostname: "res.cloudinary.com",
         pathname: "/**",
       },
+      {
+        protocol: "https",
+        hostname: "s.yimg.com",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
+        hostname: "static.seekingalpha.com",
+        pathname: "/**",
+      },
+      
     ],
   },
 };

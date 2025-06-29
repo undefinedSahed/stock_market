@@ -23,6 +23,8 @@ import {
 import Link from "next/link";
 import { IoIosNotificationsOutline } from "react-icons/io";
 import { toast } from "sonner";
+import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 
 type Stock = {
   symbol: string;
@@ -49,6 +51,10 @@ const columnHelper = createColumnHelper<Stock>();
 
 export default function StockOfMonth() {
   const [sorting, setSorting] = useState<SortingState>([]);
+  const router = useRouter();
+  const session = useSession();
+
+  const userStatus = session?.status;
 
   // API calling
   const axiosInstance = useAxios();
@@ -77,8 +83,12 @@ export default function StockOfMonth() {
   });
 
   const handleWatchlist = async (rowData: Stock) => {
+    if (userStatus === "unauthenticated") {
+      return router.push("/login");
+    }
     await mutateAsync(rowData);
   };
+
 
   const columns = useMemo(
     () => [

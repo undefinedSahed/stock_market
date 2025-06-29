@@ -21,7 +21,6 @@ interface News {
 
 const Page = ({ params }: PageProps) => {
   const axiosInstance = useAxios();
-  const isPaid = false;
 
   const { data: newsDetails = {}, isLoading } = useQuery({
     queryKey: ["blog-details"],
@@ -60,12 +59,7 @@ const Page = ({ params }: PageProps) => {
 
       <div className="col-span-4">
         <h1 className="font-bold text-4xl mb-5">{newsTitle}</h1>
-        {isPaid ? (
-          <div
-            className="quill-content text-gray-700 max-w-none"
-            dangerouslySetInnerHTML={{ __html: newsDescription }}
-          />
-        ) : (
+        {newsDetails?.isPaid ? (
           <div>
             <div
               className="quill-content text-gray-700 max-w-none"
@@ -89,6 +83,11 @@ const Page = ({ params }: PageProps) => {
               </Link>
             </div>
           </div>
+        ) : (
+          <div
+            className="quill-content text-gray-700 max-w-none"
+            dangerouslySetInnerHTML={{ __html: newsDescription }}
+          />
         )}
       </div>
 

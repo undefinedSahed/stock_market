@@ -15,7 +15,7 @@ import { toast } from "@/hooks/use-toast";
 
 interface UserData {
   _id: string;
-  userName: string;
+  fullName: string;
   email: string;
   firstName?: string;
   lastName?: string;
@@ -45,8 +45,6 @@ export default function ProfilePage() {
     },
     enabled: !!userID,
   });
-
-  console.log(userData)
 
   const updateUserMutation = useMutation({
     mutationFn: async (updateData: Partial<UserData>) => {
@@ -156,7 +154,7 @@ export default function ProfilePage() {
                     Email Address
                   </label>
                   <Input
-                    value={userData.email || ""}
+                    value={userData?.email || ""}
                     readOnly
                     className="bg-gray-50 bg-inherit border border-[#b0b0b0] read-only:cursor-not-allowed"
                   />
@@ -166,7 +164,7 @@ export default function ProfilePage() {
                     Phone
                   </label>
                   <Input
-                    value={userData.phone || "Not provided"}
+                    value={userData?.phoneNumber || "Not provided"}
                     readOnly
                     className="bg-gray-50 bg-inherit border border-[#b0b0b0] read-only:cursor-not-allowed"
                   />
@@ -177,7 +175,7 @@ export default function ProfilePage() {
                   Address
                 </label>
                 <Input
-                  value={userData.address || "Not provided"}
+                  value={userData?.address || "Not provided"}
                   readOnly
                   className="bg-gray-50 bg-inherit border border-[#b0b0b0] read-only:cursor-not-allowed"
                 />

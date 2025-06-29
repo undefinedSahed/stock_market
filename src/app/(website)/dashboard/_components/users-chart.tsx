@@ -1,24 +1,61 @@
-"use client"
+"use client";
 
-import { Bar, BarChart, CartesianGrid, XAxis, YAxis, ResponsiveContainer, Legend } from "recharts"
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  XAxis,
+  YAxis,
+  ResponsiveContainer,
+  Legend,
+} from "recharts";
+import {
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+} from "@/components/ui/chart";
 
-const usersData = [
-  { month: "Jan", paid: 400, free: 420 },
-  { month: "Feb", paid: 380, free: 400 },
-  { month: "Mar", paid: 500, free: 450 },
-  { month: "Apr", paid: 580, free: 400 },
-  { month: "May", paid: 600, free: 350 },
-  { month: "Jun", paid: 680, free: 280 },
-  { month: "Jul", paid: 700, free: 300 },
-  { month: "Aug", paid: 650, free: 320 },
-  { month: "Sep", paid: 600, free: 350 },
-  { month: "Oct", paid: 680, free: 400 },
-  { month: "Nov", paid: 500, free: 380 },
-  { month: "Dec", paid: 550, free: 420 },
-]
+const monthOrder: string[] = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
+];
 
-export function UsersChart() {
+const monthShortMap: Record<string, string> = {
+  January: "Jan",
+  February: "Feb",
+  March: "Mar",
+  April: "Apr",
+  May: "May",
+  June: "Jun",
+  July: "Jul",
+  August: "Aug",
+  September: "Sep",
+  October: "Oct",
+  November: "Nov",
+  December: "Dec",
+};
+
+export function UsersChart({
+  userChart,
+}: {
+  userChart: { paid: Record<string, number>; free: Record<string, number> };
+}) {
+  const chartData = monthOrder.map((month) => ({
+    month: monthShortMap[month],
+    paid: userChart?.paid?.[month] ?? 0,
+    free: userChart?.free?.[month] ?? 0,
+  }));
+
   return (
     <ChartContainer
       config={{
@@ -34,26 +71,53 @@ export function UsersChart() {
       className="h-[300px] w-full"
     >
       <ResponsiveContainer width="100%" height="100%">
-        <BarChart data={usersData} margin={{ top: 5, right: 20, left: 10, bottom: 5 }}>
-          <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} />
-          <XAxis dataKey="month" axisLine={false} tickLine={false} tickMargin={10} />
+        <BarChart
+          data={chartData}
+          margin={{ top: 5, right: 20, left: 10, bottom: 5 }}
+        >
+          <CartesianGrid strokeDasharray="3 3" horizontal vertical={false} />
+          <XAxis
+            dataKey="month"
+            axisLine={false}
+            tickLine={false}
+            tickMargin={10}
+          />
           <YAxis
             axisLine={false}
             tickLine={false}
             tickMargin={10}
-            tickFormatter={(value) => `$${value}`}
+            tickFormatter={(value) => `${value}`}
             domain={[0, "dataMax + 200"]}
-            ticks={[0, 200, 400, 600, 800, 1000, 1200]}
           />
           <ChartTooltip
-            content={<ChartTooltipContent className="bg-black text-white p-2 rounded-md shadow-lg" indicator="dot" />}
+            content={
+              <ChartTooltipContent
+                className="bg-black text-white p-2 rounded-md shadow-lg"
+                indicator="dot"
+              />
+            }
             cursor={false}
           />
-          <Legend align="right" verticalAlign="top" iconType="circle" wrapperStyle={{ paddingBottom: 10 }} />
-          <Bar dataKey="paid" fill="#22c55e" radius={[4, 4, 0, 0]} barSize={20} />
-          <Bar dataKey="free" fill="#22d3ee" radius={[4, 4, 0, 0]} barSize={20} />
+          <Legend
+            align="right"
+            verticalAlign="top"
+            iconType="circle"
+            wrapperStyle={{ paddingBottom: 10 }}
+          />
+          <Bar
+            dataKey="paid"
+            fill="#22c55e"
+            radius={[4, 4, 0, 0]}
+            barSize={20}
+          />
+          <Bar
+            dataKey="free"
+            fill="#22d3ee"
+            radius={[4, 4, 0, 0]}
+            barSize={20}
+          />
         </BarChart>
       </ResponsiveContainer>
     </ChartContainer>
-  )
+  );
 }

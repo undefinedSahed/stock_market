@@ -34,48 +34,48 @@ export default function StockChart({ selectedStock, timeframe, comparisonStocks 
 
     // Convert timeframe to API parameters, memoized for stability
     const getTimeframeParams = useCallback((timeframe: string) => {
-        const now = Math.floor(Date.now() / 1000); // Current timestamp in seconds
+        const now = Math.floor(Date.now() / 1000);
         let from: number;
         let resolution: string;
 
         switch (timeframe) {
             case "1D":
-                from = now - 24 * 60 * 60; // 1 day ago
-                resolution = "5"; // 5 minute intervals
+                from = now - 24 * 60 * 60; 
+                resolution = "5"; 
                 break;
             case "5D":
-                from = now - 5 * 24 * 60 * 60; // 5 days ago
-                resolution = "15"; // 15 minute intervals
+                from = now - 5 * 24 * 60 * 60; 
+                resolution = "15"; 
                 break;
             case "1M":
-                from = now - 30 * 24 * 60 * 60; // 30 days ago
-                resolution = "60"; // 1 hour intervals
+                from = now - 30 * 24 * 60 * 60; 
+                resolution = "60"; 
                 break;
             case "3M":
-                from = now - 90 * 24 * 60 * 60; // 90 days ago
-                resolution = "D"; // Daily
+                from = now - 90 * 24 * 60 * 60; 
+                resolution = "D"; 
                 break;
             case "6M":
-                from = now - 180 * 24 * 60 * 60; // 180 days ago
-                resolution = "D"; // Daily
+                from = now - 180 * 24 * 60 * 60; 
+                resolution = "D"; 
                 break;
             case "YTD":
                 const ytdStart = new Date();
-                ytdStart.setMonth(0, 1); // January 1st of current year
+                ytdStart.setMonth(0, 1); 
                 ytdStart.setHours(0, 0, 0, 0);
                 from = Math.floor(ytdStart.getTime() / 1000);
-                resolution = "D"; // Daily
+                resolution = "D"; 
                 break;
             case "1Y":
-                from = now - 365 * 24 * 60 * 60; // 1 year ago
-                resolution = "D"; // Daily
+                from = now - 365 * 24 * 60 * 60;
+                resolution = "D"; 
                 break;
             case "5Y":
-                from = now - 5 * 365 * 24 * 60 * 60; // 5 years ago
-                resolution = "W"; // Weekly
+                from = now - 5 * 365 * 24 * 60 * 60; 
+                resolution = "W"; 
                 break;
             default:
-                from = now - 365 * 24 * 60 * 60; // Default to 1 year
+                from = now - 365 * 24 * 60 * 60;
                 resolution = "D";
         }
 
@@ -118,7 +118,6 @@ export default function StockChart({ selectedStock, timeframe, comparisonStocks 
 
     // Get color for a comparison stock, with comparisonColors defined inside for stability
     const getComparisonColor = useCallback((symbol: string): string => {
-        // Color palette for comparison stocks only
         const comparisonColors = {
             AAPL: "#f43f5e", // Red
             NVDA: "#10b981", // Green
@@ -160,33 +159,28 @@ export default function StockChart({ selectedStock, timeframe, comparisonStocks 
             return data;
         } catch (error) {
             console.error(`Error fetching data for ${symbol}:`, error);
-            return null; // Indicate failure
+            return null; 
         }
-    }, [getTimeframeParams]); // getTimeframeParams is a dependency
+    }, [getTimeframeParams]); 
 
-    // Load data for all stocks whenever selectedStock, timeframe, or comparisonStocks change
     useEffect(() => {
         async function loadData() {
             setLoading(true);
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const newChartData: { [key: string]: any } = {};
 
-            // Load main stock data
             const mainData = await fetchStockData(selectedStock, timeframe);
             if (mainData) {
                 newChartData[selectedStock] = transformApiData(mainData);
             } else {
-                // If main stock data fails, explicitly set it to undefined to trigger "Data not available"
                 newChartData[selectedStock] = undefined;
             }
 
-            // Load comparison stocks data
             for (const stock of comparisonStocks) {
                 const compData = await fetchStockData(stock, timeframe);
                 if (compData) {
                     newChartData[stock] = transformApiData(compData);
                 }
-                // If compData is null, it's simply not added to newChartData, and the chart will omit it.
             }
 
             setChartData(newChartData);
@@ -196,12 +190,10 @@ export default function StockChart({ selectedStock, timeframe, comparisonStocks 
         loadData();
     }, [selectedStock, timeframe, comparisonStocks, fetchStockData, transformApiData]);
 
-    // Initialize ECharts instance on first render
     useEffect(() => {
         if (chartRef.current && !chartInstanceRef.current) {
             chartInstanceRef.current = echarts.init(chartRef.current);
 
-            // Handle resize to make the chart responsive
             const handleResize = () => {
                 if (chartInstanceRef.current) {
                     chartInstanceRef.current.resize();
@@ -220,26 +212,24 @@ export default function StockChart({ selectedStock, timeframe, comparisonStocks 
         }
     }, []);
 
-    // Update ECharts options whenever chartData, selectedStock, or other relevant props change
     useEffect(() => {
         if (!chartInstanceRef.current || loading) return;
 
         const mainStockData = chartData[selectedStock];
 
-        // Display "Data not available" message if main stock data is missing
         if (!mainStockData) {
             chartInstanceRef.current.setOption({
                 xAxis: { show: false },
                 yAxis: { show: false },
                 grid: { show: false },
-                series: [] // Clear any previous series
+                series: [] 
             }, true);
             return;
         }
 
         const { priceData, volumeData } = mainStockData;
 
-        // Prepare series for the chart
+
         const series = [
             {
                 name: selectedStock,

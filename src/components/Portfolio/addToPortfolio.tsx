@@ -121,7 +121,8 @@ export default function AddToPortfolio() {
                     portfolioId: data.portfolioId,
                     symbol: data.symbol,
                     quantity: data.quantity,
-                    price: data.price
+                    price: data.price,
+                    event: "buy"
                 }),
             })
 

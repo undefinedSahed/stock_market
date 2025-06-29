@@ -17,6 +17,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Loader2 } from "lucide-react";
 
 interface ProfileData {
+  id?: string;
   _id?: string;
   firstName?: string;
   lastName?: string;
@@ -47,6 +48,7 @@ export function EditProfileModal({
   isLoading = false,
 }: EditProfileModalProps) {
   const [formData, setFormData] = useState<ProfileData>({
+    id: "",
     fullName: "",
     email: "",
     phoneNumber: "",
@@ -56,6 +58,7 @@ export function EditProfileModal({
   useEffect(() => {
     if (profileData) {
       setFormData({
+        id: profileData._id,
         fullName: profileData.fullName || "",
         email: profileData.email || "",
         phoneNumber: profileData.phoneNumber || "",
@@ -76,7 +79,10 @@ export function EditProfileModal({
 
     const changedData: Partial<ProfileData> = {};
 
-    // Always send email if exists
+    if (formData.id) {
+      changedData.id = formData.id;
+    }
+
     if (formData.email) {
       changedData.email = formData.email;
     }
