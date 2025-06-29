@@ -24,6 +24,7 @@ import {
 import {
   CanvasRenderer
 } from "echarts/renderers";
+import Link from "next/link";
 
 // Register required components
 echarts.use([
@@ -275,7 +276,7 @@ export default function Home() {
       </div>
 
       {/* Portfolio Sections */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 p-3">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 p-3 gap-5">
         {/* Left Section */}
         <div className="border rounded-xl overflow-hidden h-[400px] bg-white shadow-[0px_0px_8px_0px_#00000029] max-w-[100vw]">
           {
@@ -295,7 +296,7 @@ export default function Home() {
                 </div>
 
                 <div className="py-3 text-center">
-                  <h1 className="text-[40px] text-[#595959] font-bold">
+                  <h1 className="lg:text-[40px] text-3xl text-[#595959] font-bold">
                     {`$${Number(overviewData?.totalValueWithCash)?.toLocaleString("en-US", {
                       minimumFractionDigits: 2,
                       maximumFractionDigits: 2,
@@ -312,7 +313,7 @@ export default function Home() {
                   <div className="flex items-center gap-2">
                     <Input
                       type="number"
-                      className="w-32"
+                      className="lg:w-32 w-24"
                       value={cashValue}
                       onChange={(e) => setCashValue(e.target.value)}
                       onKeyDown={(e) => {
@@ -335,14 +336,14 @@ export default function Home() {
                 <div className="mt-4">
                   <div className="flex divide-x divide-gray-200">
                     {/* Total Return */}
-                    <div className="flex-1 px-4">
+                    <div className="flex-1 lg:px-4 px-1">
                       <div className={`flex items-center ${isReturnPositive ? "text-green-500" : "text-red-500"}`}>
-                        {isReturnPositive ? <FaCaretUp className="w-6 h-6 mr-1" /> : <FaCaretDown className="w-6 h-6 mr-1" />}
-                        <span className="text-lg font-semibold">$ {dailyReturn}</span>
+                        {isReturnPositive ? <FaCaretUp className="lg:w-6 lg:h-6 w-4 h-4 mr-1" /> : <FaCaretDown className="lg:w-6 w-4 h-4 lg:h-6 mr-1" />}
+                        <span className="lg:text-lg text-sm font-semibold">$ {dailyReturn}</span>
                       </div>
                       <div className={`flex items-center ${isReturnPercentPositive ? "text-green-500" : "text-red-500"}`}>
-                        {isReturnPercentPositive ? <FaCaretUp className="w-6 h-6 mr-1" /> : <FaCaretDown className="w-6 h-6 mr-1" />}
-                        <span className="text-lg font-semibold">{dailyReturnPercent}%</span>
+                        {isReturnPercentPositive ? <FaCaretUp className="lg:w-6 lg:h-6 w-4 h-4 mr-1" /> : <FaCaretDown className="lg:w-6 w-4 lg:h-6 h-4 mr-1" />}
+                        <span className="lg:text-lg text-sm font-semibold">{dailyReturnPercent}%</span>
                       </div>
                       <div className="flex items-center text-xs mt-4 text-muted-foreground">
                         Daily Return
@@ -350,23 +351,23 @@ export default function Home() {
                     </div>
 
                     {/* Daily Return */}
-                    <div className="flex-1 px-4 mt-9">
+                    <div className="flex-1 lg:px-4 px-1 lg:mt-10 mt-8">
                       <div className={`flex items-center ${isMonthlyReturnPercentPositive ? "text-green-500" : "text-red-500"}`}>
-                        {isMonthlyReturnPercentPositive ? <FaCaretUp className="w-6 h-6 mr-1" /> : <FaCaretDown className="w-6 h-6 mr-1" />}
-                        <span className="text-lg font-semibold">{overviewData?.monthlyReturnPercent}%</span>
+                        {isMonthlyReturnPercentPositive ? <FaCaretUp className="g:w-6 w-4 h-4 lg:h-6 mr-1" /> : <FaCaretDown className="g:w-6 w-4 h-4 lg:h-6 mr-1" />}
+                        <span className="lg:text-lg text-sm font-semibold">{overviewData?.monthlyReturnPercent}%</span>
                       </div>
                       <div className="text-xs text-center">
-                        30 Day Return
+                        30 Days Return
                       </div>
                     </div>
 
                     {/* 30 Day Return */}
-                    <div className="flex-1 px-4 mt-9">
-                      <div className="h-8 flex items-center justify-center">
-                        ---
+                    <div className="flex-1 lg:mt-10 mt-7 lg:px-4 px-1">
+                      <div className="flex items-center justify-center">
+                        00%
                       </div>
                       <div className="text-xs text-center">
-                        30 Day Return
+                        Overall Return
                       </div>
                     </div>
                   </div>
@@ -467,9 +468,11 @@ export default function Home() {
                     <h2 className="font-semibold text-lg text-gray-800">
                       Portfolio Performance
                     </h2>
-                    <div className="text-xs text-green-500 flex items-center cursor-pointer hover:underline">
-                      See All <ArrowRight className="h-3 w-3 ml-1" />
-                    </div>
+                    <Link href="/my-portfolio/performance">
+                      <div className="text-xs text-green-500 flex items-center cursor-pointer hover:underline">
+                        See All <ArrowRight className="h-3 w-3 ml-1" />
+                      </div>
+                    </Link>
                   </div>
                   <div className="flex mt-2 shadow-[0px_0px_10px_1px_#0000001A]">
                     <div className="px-4 py-2 font-medium relative after:absolute after:top-0 after:left-0 after:content-[''] after:h-[5px] after:w-full after:bg-[#28A745]">

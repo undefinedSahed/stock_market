@@ -19,8 +19,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className="scroll-smooth">
-      <body className={`${poppins.className} antialiased`}>
-        {/* Top Loader Bar */}
+      <body className={`${poppins.className} antialiased overflow-x-hidden`}>
         <NextTopLoader
           initialPosition={0.08}
           crawlSpeed={200}
@@ -36,7 +35,7 @@ export default function RootLayout({
             <SocketProvider>{children}</SocketProvider>
           </LayoutWrapper>
         </AuthSessionProvider>
-        <Toaster position="top-right"/>
+        <Toaster position="top-right" />
       </body>
     </html>
   );

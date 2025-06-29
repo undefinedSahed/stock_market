@@ -30,10 +30,11 @@ export default function LayoutWrapper({
     pathname.includes("my-portfolio") || pathname.includes("stock");
   return (
     <>
-      {!isAuthRoute && !isDashboardRoute && <Navbar />}
+      
 
       <PortfolioProvider>
         <QueryClientProvider client={queryClient}>
+          {!isAuthRoute && !isDashboardRoute && <Navbar />}
           <main>{children}</main>
         </QueryClientProvider>
       </PortfolioProvider>

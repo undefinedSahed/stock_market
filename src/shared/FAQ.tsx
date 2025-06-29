@@ -61,8 +61,8 @@ export default function FAQ() {
                 </div>
 
 
-                <div className="flex justify-between items-center">
-                    <div className="w-[70%] space-y-4">
+                <div className="flex flex-col lg:flex-row justify-between items-center">
+                    <div className="lg:w-[70%] space-y-4">
                         {faqs.map((faq, index) => (
                             <div
                                 key={index}
@@ -86,7 +86,7 @@ export default function FAQ() {
                             </div>
                         ))}
                     </div>
-                    <div className="w-[20%] bg-white p-4 rounded-lg shadow-sm">
+                    <div className="lg:w-[20%] bg-white p-4 rounded-lg shadow-sm">
                         <Image
                             src="/images/explore_plan_page/faq.png"
                             alt="Question marks illustration"

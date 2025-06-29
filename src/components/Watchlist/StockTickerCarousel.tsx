@@ -26,7 +26,7 @@ export default function StockTickerCarousel() {
                   <div className="">
                     <div className="">
                       <div className="text-[12px] text-blue-600 font-semibold">
-                        {stock.symbol}
+                        {stock.name}
                       </div>
                       <div className="text-[12px] font-bold text-black">
                         {parseFloat(stock.currentPrice)?.toFixed(2)}

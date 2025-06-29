@@ -9,7 +9,7 @@ export default function ProfileLayout({ children }: { children: React.ReactNode 
             <PortfolioProvider>
                 <SidebarProvider>
                     <div className="">
-                        <SidebarTrigger className="lg:hidden mt-2 ml-1" />
+                        <SidebarTrigger className="lg:hidden translate-y-7 ml-1" />
                         <div className="">
                             <PortfolioSidebar />
                         </div>

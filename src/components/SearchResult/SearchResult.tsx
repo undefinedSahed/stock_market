@@ -209,7 +209,7 @@ const SearchResult = () => {
                 </Link>
               </div>
 
-              <div className="w-1/3 flex justify-end">
+              <div className="w-1/3 flex items-center justify-end">
                 <Image
                   src={
                     stockData?.shariaCompliant
@@ -220,6 +220,10 @@ const SearchResult = () => {
                   width={40}
                   height={40}
                 />
+                
+                <div title={stockData?.reason} className="h-5 w-5 rounded-full bg-gray-500 text-white flex justify-center items-center flex-col cursor-pointe">
+                  ?
+                </div>
               </div>
             </div>
 
@@ -467,7 +471,9 @@ const SearchResult = () => {
         <div className="flex flex-col lg:flex-row gap-4 lg:gap-0 justify-between items-center border-b-2 border-[#737373] pb-2">
           <div>
             <h1 className=" text-3xl font-semibold">{stockData?.company}</h1>
-            <p className="text-[16px] text-gray-400 mt-2">{stockData?.exchange}</p>
+            <p className="text-[16px] text-gray-400 mt-2">
+              {stockData?.exchange}
+            </p>
           </div>
 
           <div className="flex items-center gap-5 max-w-full lg:max-w-none">
@@ -512,7 +518,9 @@ const SearchResult = () => {
         <div className="flex flex-col lg:flex-row gap-4 lg:gap-0 justify-between items-center border-b-2 border-[#737373] pb-2">
           <div>
             <h1 className=" text-3xl font-semibold">{stockData?.company}</h1>
-            <p className="text-[16px] text-gray-400 mt-2">{stockData?.exchange}</p>
+            <p className="text-[16px] text-gray-400 mt-2">
+              {stockData?.exchange}
+            </p>
           </div>
 
           <div className="flex items-center gap-5 max-w-full lg:max-w-none">
