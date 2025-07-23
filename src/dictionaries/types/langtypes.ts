@@ -85,8 +85,10 @@ export interface LangTypes {
   stockTicker: string;
   priceChange: string;
   score: string;
+  lastDays: string;
   topStocks: string;
   ratingsBySector: string;
   upsidePotential: string;
+  price: string;
   allTopStocks: string;
 }

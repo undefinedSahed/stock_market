@@ -112,7 +112,7 @@ export default function StockDashboard() {
                   onClick={() => setShowAllTop(!showAllTop)}
                   className="flex items-center text-sm font-medium text-green-600 hover:text-green-700"
                 >
-                  {showAllTop ? "Show Less" : "All Top Stocks"}
+                  {showAllTop ? "Show Less" : dictionary.allTopStocks}
                   <ChevronRight className="ml-1 h-4 w-4" />
                 </button>
               </div>

@@ -98,8 +98,10 @@ export const enLangs = {
   stockTicker: "Stock Ticker",
   priceChange: "Price & Change",
   score: "Score",
+  lastDays :"Rating in Last 30 Days",
   topStocks: "Top Stocks",
   ratingsBySector: "Ratings vs Sector Avg.",
   upsidePotential: "Upside Potential",
+  price : "Price",
   allTopStocks: "See All Top Stocks",
 };

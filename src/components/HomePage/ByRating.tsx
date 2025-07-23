@@ -12,6 +12,7 @@ import { DialogHeader } from "../ui/dialog";
 import { Unlock } from "lucide-react";
 import { Button } from "../ui/button";
 import { useState } from "react";
+import { useLanguage } from "@/providers/LanguageProvider";
 
 interface TopStock {
   symbol: string;
@@ -32,6 +33,7 @@ interface TopStocksTableProps {
 export default function TopStocksTable({ topStocks }: TopStocksTableProps) {
   const { paymentType } = useUserPayment();
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const { dictionary } = useLanguage();
 
   if (!topStocks || topStocks.length === 0) {
     return (
@@ -45,13 +47,17 @@ export default function TopStocksTable({ topStocks }: TopStocksTableProps) {
     <div className="w-full overflow-x-auto">
       <div className="min-w-[600px] w-full max-w-4xl mx-auto">
         <div className="mt-4 grid grid-cols-4 gap-2 rounded-t-md bg-green-50 p-2 text-sm font-medium">
-          <div className="flex flex-col justify-center">Stock Info</div>
-          <div className="ml-10 flex flex-col justify-center">
-            Price & Changes
-          </div>
-          <div className="ml-7 flex flex-col justify-center">Price</div>
           <div className="flex flex-col justify-center">
-            Upside <br /> Potential
+            {dictionary.company}
+          </div>
+          <div className="ml-10 flex flex-col justify-center">
+            {dictionary.priceChange}
+          </div>
+          <div className="ml-7 flex flex-col justify-center">
+            {dictionary.price}
+          </div>
+          <div className="flex flex-col justify-center">
+            {dictionary?.upsidePotential}
           </div>
         </div>
 

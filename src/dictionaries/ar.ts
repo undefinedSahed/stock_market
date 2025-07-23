@@ -58,7 +58,7 @@ export const arLangs = {
   empowerInvestors:
     "نمنح الجميع الأدوات والمقالات التي يستخدمها المستثمرون المحترفون لاتخاذ قرارات استثمارية مستنيرة",
 
-  essentialServices : "الخدمات الأساسية",
+  essentialServices: "الخدمات الأساسية",
   deepStockAnalysis: "تحليل الأسهم المتعمق",
   aiBackedData: "تحليل الأسهم باستخدام بيانات مدعومة بالذكاء الاصطناعي.",
   buildStrongPortfolio: "قم ببناء محفظة استثمارية قوية",
@@ -87,8 +87,10 @@ export const arLangs = {
   stockTicker: "رمز السهم",
   priceChange: "السعر والتغير",
   score: "التقييم",
+  lastDays: "التقييم في آخر 30 يومًا",
   topStocks: "أفضل الأسهم",
   ratingsBySector: "التقييم مقارنة بمتوسط القطاع",
   upsidePotential: "القيمة الصاعدة حاليًا",
+  price : "سعر",
   allTopStocks: "عرض القائمة الكاملة",
 };

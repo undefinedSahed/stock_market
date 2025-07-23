@@ -78,7 +78,7 @@ export default function HeroSwiper() {
               />
             </div>
             <h3 className="ml-2 text-2xl font-bold text-green-600 mt-5 text-center lg:text-start">
-              {dictionary.oliveStocks}
+              Olive Stocks
             </h3>
 
             <div className="mt-6 flex items-center justify-center lg:justify-start">

@@ -12,6 +12,7 @@ import {
 import { DialogHeader } from "../ui/dialog";
 import { Unlock } from "lucide-react";
 import { Button } from "../ui/button";
+import { useLanguage } from "@/providers/LanguageProvider";
 
 interface TrendingStock {
   symbol: string;
@@ -34,8 +35,7 @@ export default function StockTrackingTable({
 }: StockTrackingTableProps) {
   const { paymentType } = useUserPayment();
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
-
-  console.log(trendingStocks);
+  const { dictionary } = useLanguage();
 
   if (!trendingStocks || trendingStocks.length === 0) {
     return (
@@ -49,13 +49,17 @@ export default function StockTrackingTable({
     <div className="w-full overflow-x-auto">
       <div className="min-w-[600px] w-full max-w-4xl mx-auto">
         <div className="mt-4 grid grid-cols-4 gap-2 rounded-t-md bg-green-50 p-2 text-sm font-medium">
-          <div className="flex flex-col justify-center">Stock Info</div>
-          <div className="ml-10 flex flex-col justify-center">Smart Score</div>
+          <div className="flex flex-col justify-center">
+            {dictionary.company}
+          </div>
+          <div className="ml-10 flex flex-col justify-center">
+            {dictionary.score}
+          </div>
           <div className="ml-7 flex flex-col justify-center">
-            Price & Changes
+            {dictionary.priceChange}
           </div>
           <div className="flex flex-col justify-center">
-            Rating in Last 30 Days
+            {dictionary.lastDays}
           </div>
         </div>
 
